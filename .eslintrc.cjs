@@ -30,4 +30,5 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'react'],
   rules: {},
-};
+  ignorePatterns: ['postcss.config.js', 'tailwind.config.js', 'vite.config.ts'],
+}
