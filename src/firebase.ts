@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import { GoogleAuthProvider, getAuth } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_APP_API_KEY,
@@ -10,5 +11,8 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_APP_MEASUREMENT_ID,
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export const app = initializeApp(firebaseConfig)
+const app = initializeApp(firebaseConfig)
+
+// authentication
+export const provider = new GoogleAuthProvider()
+export const auth = getAuth(app)
