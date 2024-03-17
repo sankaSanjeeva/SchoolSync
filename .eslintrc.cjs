@@ -21,6 +21,13 @@ module.exports = {
         sourceType: 'script',
       },
     },
+    {
+      files: ['src/components/ui/*'],
+      rules: {
+        'react/prop-types': 'off',
+        'react/jsx-props-no-spreading': 'off',
+      },
+    },
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -29,6 +36,9 @@ module.exports = {
     project: ['./tsconfig.json', './tsconfig.node.json'],
   },
   plugins: ['@typescript-eslint', 'react'],
-  rules: {},
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'import/extensions': 'off',
+  },
   ignorePatterns: ['postcss.config.js', 'tailwind.config.js', 'vite.config.ts'],
 }
