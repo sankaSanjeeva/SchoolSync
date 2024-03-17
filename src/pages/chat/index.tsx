@@ -1,16 +1,10 @@
-import { signOut } from 'firebase/auth'
-import { auth } from '@/firebase'
+import { ChatWindow, SidePanel } from './components'
 
 export default function Chat() {
-  const handleSignOut = () => {
-    signOut(auth)
-  }
-
   return (
-    <div>
-      <button type="button" onClick={handleSignOut}>
-        Sign out
-      </button>
+    <div className="flex max-w-screen-lg mx-auto h-screen">
+      <SidePanel />
+      <ChatWindow />
     </div>
   )
 }

@@ -21,6 +21,13 @@ module.exports = {
         sourceType: 'script',
       },
     },
+    {
+      files: ['src/components/ui/*'],
+      rules: {
+        'react/prop-types': 'off',
+        'react/jsx-props-no-spreading': 'off',
+      },
+    },
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {

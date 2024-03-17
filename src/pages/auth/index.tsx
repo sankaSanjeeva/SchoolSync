@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, provider } from '@/firebase'
+import { Button } from '@/components/ui/button'
 
 export default function Auth() {
   const navigate = useNavigate()
@@ -12,10 +13,8 @@ export default function Auth() {
   }
 
   return (
-    <div>
-      <button type="button" onClick={handleSignUp}>
-        Sign up with google
-      </button>
+    <div className="flex justify-center items-center h-screen">
+      <Button onClick={handleSignUp}>Sign up with google</Button>
     </div>
   )
 }
