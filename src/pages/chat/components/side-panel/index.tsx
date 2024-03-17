@@ -1,18 +1,18 @@
-import { ChevronIcon, PencilIcon, SearchIcon } from '@/assets/icons'
-import { Button } from '@/components/ui/button'
+import { SearchIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TopIcons } from './components'
+
+enum Tab {
+  ALL = 'all',
+  PRIVATE = 'private',
+  GROUP = 'group',
+}
 
 export default function SidePanel() {
   return (
     <aside className="w-[300px]">
-      <div className="p-5 flex justify-end gap-1">
-        <Button variant="ghost" size="icon">
-          <PencilIcon />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <ChevronIcon />
-        </Button>
-      </div>
+      <TopIcons />
 
       <div className="px-5">
         <Input
@@ -22,6 +22,21 @@ export default function SidePanel() {
           startAdornment={<SearchIcon className="text-gray-400" />}
         />
       </div>
+
+      <Tabs
+        defaultValue={Tab.ALL}
+        className="mt-3"
+        // onValueChange={(e) => console.log(e)}
+      >
+        <TabsList>
+          <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
+          <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
+          <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
+        </TabsList>
+        <TabsContent value={Tab.ALL}>all</TabsContent>
+        <TabsContent value={Tab.PRIVATE}>private</TabsContent>
+        <TabsContent value={Tab.GROUP}>group</TabsContent>
+      </Tabs>
     </aside>
   )
 }
