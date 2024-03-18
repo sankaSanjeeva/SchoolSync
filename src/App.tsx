@@ -63,7 +63,11 @@ function App() {
     return 'Loading...'
   }
 
-  return <RouterProvider router={router} />
+  return (
+    <div className="bg-white dark:bg-gray-900 text-black dark:text-white transition-colors">
+      <RouterProvider router={router} />
+    </div>
+  )
 }
 
 export default App

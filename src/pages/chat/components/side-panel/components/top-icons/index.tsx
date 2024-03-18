@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/firebase'
 import {
@@ -31,12 +31,40 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
+type Theme = 'dark' | 'light' | 'system'
+
 export default function TopIcons() {
   const [showLogOutConfirmation, setShowLogOutConfirmation] = useState(false)
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem('theme') as Theme) || 'system'
+  )
+
+  const handleTheme = (newTheme: 'dark' | 'light' | 'system') => {
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+  }
 
   const handleSignOut = () => {
     signOut(auth)
   }
+
+  useEffect(() => {
+    const root = window.document.documentElement
+
+    root.classList.remove('light', 'dark')
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+        ? 'dark'
+        : 'light'
+
+      root.classList.add(systemTheme)
+      return
+    }
+
+    root.classList.add(theme)
+  }, [theme])
 
   return (
     <div className="p-5 flex justify-end gap-1">
@@ -53,19 +81,19 @@ export default function TopIcons() {
         <DropdownMenuContent>
           <DropdownMenuGroup>
             <DropdownMenuLabel>Theme</DropdownMenuLabel>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleTheme('light')}>
               Light
               <DropdownMenuShortcut>
                 <LightModeIcon />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleTheme('dark')}>
               Dark
               <DropdownMenuShortcut>
                 <DarkModeIcon />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleTheme('system')}>
               System
               <DropdownMenuShortcut>
                 <SystemModeIcon />
