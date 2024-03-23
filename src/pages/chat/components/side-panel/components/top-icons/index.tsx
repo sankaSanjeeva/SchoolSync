@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/firebase'
 import {
@@ -30,41 +30,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-type Theme = 'dark' | 'light' | 'system'
+import { useTheme } from '@/lib/theme'
 
 export default function TopIcons() {
   const [showLogOutConfirmation, setShowLogOutConfirmation] = useState(false)
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem('theme') as Theme) || 'system'
-  )
 
-  const handleTheme = (newTheme: 'dark' | 'light' | 'system') => {
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-  }
+  const { setTheme } = useTheme()
 
   const handleSignOut = () => {
     signOut(auth)
   }
-
-  useEffect(() => {
-    const root = window.document.documentElement
-
-    root.classList.remove('light', 'dark')
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light'
-
-      root.classList.add(systemTheme)
-      return
-    }
-
-    root.classList.add(theme)
-  }, [theme])
 
   return (
     <div className="p-5 flex justify-end gap-1">
@@ -81,19 +56,19 @@ export default function TopIcons() {
         <DropdownMenuContent>
           <DropdownMenuGroup>
             <DropdownMenuLabel>Theme</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => handleTheme('light')}>
+            <DropdownMenuItem onClick={() => setTheme('light')}>
               Light
               <DropdownMenuShortcut>
                 <LightModeIcon />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleTheme('dark')}>
+            <DropdownMenuItem onClick={() => setTheme('dark')}>
               Dark
               <DropdownMenuShortcut>
                 <DarkModeIcon />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleTheme('system')}>
+            <DropdownMenuItem onClick={() => setTheme('system')}>
               System
               <DropdownMenuShortcut>
                 <SystemModeIcon />
