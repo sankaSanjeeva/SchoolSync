@@ -1,16 +1,23 @@
+import { Children } from 'react'
+import { useCollectionData } from 'react-firebase-hooks/firestore'
+import { collection, query, where } from 'firebase/firestore'
 import { SearchIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChatItem, TopIcons } from './components'
+import { ChatItem, ChatItemSkeleton, TopIcons } from './components'
 import { ScrollArea } from '@/components/ui/scroll-area'
-
-enum Tab {
-  ALL = 'all',
-  PRIVATE = 'private',
-  GROUP = 'group',
-}
+import { Tab } from '@/enums'
+import { auth, db } from '@/firebase'
+import { chatConverter } from '@/types'
 
 export default function SidePanel() {
+  const [chats, loading] = useCollectionData(
+    query(
+      collection(db, 'chats').withConverter(chatConverter),
+      where('memberIDs', 'array-contains', auth.currentUser?.uid)
+    )
+  )
+
   return (
     <aside className="w-[300px]">
       <TopIcons />
@@ -35,20 +42,20 @@ export default function SidePanel() {
           <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
         </TabsList>
         <TabsContent value={Tab.ALL}>
-          <ScrollArea className="h-[calc(100vh_-_176px)]">
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 22, 56, 85, 122].map(
-              (x) => (
-                <ChatItem
-                  key={x}
-                  id={x}
-                  unReadCount={x}
-                  lastMessage="Thank you very much, I am waiting"
-                  time="11:23 PM"
-                  name="Sanka"
-                />
-              )
-            )}
-          </ScrollArea>
+          {loading ? (
+            <div className="h-[calc(100vh_-_176px)] overflow-hidden">
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
+                <ChatItemSkeleton key={x} />
+              ))}
+            </div>
+          ) : (
+            <ScrollArea className="h-[calc(100vh_-_176px)]">
+              {Children.toArray(
+                // eslint-disable-next-line react/jsx-key
+                chats?.map((chat) => <ChatItem {...chat} />)
+              )}
+            </ScrollArea>
+          )}
         </TabsContent>
         <TabsContent value={Tab.PRIVATE}>private</TabsContent>
         <TabsContent value={Tab.GROUP}>group</TabsContent>

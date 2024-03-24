@@ -22,8 +22,12 @@ export default function Auth() {
 
     const user = getAdditionalUserInfo(userCredential!)
 
+    if (!userCredential?.user.uid) {
+      throw new Error('uid is not defined')
+    }
+
     if (user?.isNewUser) {
-      await setDoc(doc(db, 'users', user?.profile?.id as string), {
+      await setDoc(doc(db, 'users', userCredential?.user.uid), {
         name: user?.profile?.name,
         email: user?.profile?.email,
         picture: user?.profile?.picture,
