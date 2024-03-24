@@ -1,22 +1,45 @@
 import { Children } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, query, where } from 'firebase/firestore'
 import { SearchIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChatItem, ChatItemSkeleton, TopIcons } from './components'
+import {
+  ChatItem,
+  ChatItemSkeleton,
+  SearchResult,
+  TopIcons,
+} from './components'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
 import { auth, db } from '@/firebase'
 import { chatConverter } from '@/types'
 
 export default function SidePanel() {
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const [chats, loading] = useCollectionData(
     query(
       collection(db, 'chats').withConverter(chatConverter),
       where('memberIDs', 'array-contains', auth.currentUser?.uid)
     )
   )
+
+  const search = searchParams.get('search') ?? ''
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target
+
+    setSearchParams((params) => {
+      if (value) {
+        params.set('search', value)
+      } else {
+        params.delete('search')
+      }
+      return params
+    })
+  }
 
   return (
     <aside className="w-[300px]">
@@ -28,38 +51,45 @@ export default function SidePanel() {
           variant="search"
           className="pl-8"
           startAdornment={<SearchIcon className="text-gray-400" />}
+          value={search}
+          onChange={handleSearch}
         />
       </div>
 
-      <Tabs
-        defaultValue={Tab.ALL}
-        className="mt-3"
-        // onValueChange={(e) => console.log(e)}
-      >
-        <TabsList>
-          <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
-          <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
-          <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
-        </TabsList>
-        <TabsContent value={Tab.ALL}>
-          {loading ? (
-            <div className="h-[calc(100vh_-_176px)] overflow-hidden">
-              {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
-                <ChatItemSkeleton key={x} />
-              ))}
-            </div>
-          ) : (
-            <ScrollArea className="h-[calc(100vh_-_176px)]">
-              {Children.toArray(
-                // eslint-disable-next-line react/jsx-key
-                chats?.map((chat) => <ChatItem {...chat} />)
+      <div className="mt-3">
+        {search ? (
+          <SearchResult chats={chats} search={search} />
+        ) : (
+          <Tabs
+            defaultValue={Tab.ALL}
+            // onValueChange={(e) => console.log(e)}
+          >
+            <TabsList>
+              <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
+              <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
+              <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
+            </TabsList>
+            <TabsContent value={Tab.ALL}>
+              {loading ? (
+                <div className="h-[calc(100vh_-_176px)] overflow-hidden">
+                  {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
+                    <ChatItemSkeleton key={x} />
+                  ))}
+                </div>
+              ) : (
+                <ScrollArea className="h-[calc(100vh_-_176px)]">
+                  {Children.toArray(
+                    // eslint-disable-next-line react/jsx-key
+                    chats?.map((chat) => <ChatItem {...chat} />)
+                  )}
+                </ScrollArea>
               )}
-            </ScrollArea>
-          )}
-        </TabsContent>
-        <TabsContent value={Tab.PRIVATE}>private</TabsContent>
-        <TabsContent value={Tab.GROUP}>group</TabsContent>
-      </Tabs>
+            </TabsContent>
+            <TabsContent value={Tab.PRIVATE}>private</TabsContent>
+            <TabsContent value={Tab.GROUP}>group</TabsContent>
+          </Tabs>
+        )}
+      </div>
     </aside>
   )
 }

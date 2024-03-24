@@ -27,8 +27,8 @@ export type Chat = {
     content: string
     timestamp: string
   }
-  membersIDs: string[]
-  members: (Partial<User> & { unreadCount: number | null })[]
+  memberIDs: string[]
+  members: (Partial<User> & { unreadCount?: number | null })[]
 }
 
 export const chatConverter: FirestoreDataConverter<Chat> = {

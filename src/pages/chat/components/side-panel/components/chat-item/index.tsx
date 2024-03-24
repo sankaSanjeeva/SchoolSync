@@ -6,8 +6,8 @@ import { Chat } from '@/types'
 const selected = false
 const active = true
 
-export default function ChatItem({ lastMessage, members }: Chat) {
-  const user = members.filter((x) => x.uid !== auth.currentUser?.uid)[0]
+export default function ChatItem({ lastMessage, members }: Partial<Chat>) {
+  const user = members?.filter((x) => x.uid !== auth.currentUser?.uid)[0]
 
   return (
     <button
@@ -20,30 +20,30 @@ export default function ChatItem({ lastMessage, members }: Chat) {
       <div className="w-full grid grid-cols-[auto_1fr_auto_auto] grid-rows-2 gap-x-2">
         <div className="row-span-2">
           <Avatar active={active}>
-            <AvatarImage src={user.picture} />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src={user?.picture} />
+            <AvatarFallback>{user?.name?.at(0)?.toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
         <span className="text-ellipsis overflow-hidden text-nowrap font-bold self-center">
-          {user.name}
+          {user?.name}
         </span>
-        {user.unreadCount ? (
+        {user?.unreadCount ? (
           <span className="text-xs px-1 pt-0.5 pb-1 self-center rounded-full text-white leading-none bg-green-500">
-            {user.unreadCount > 99 ? '99+' : user.unreadCount}
+            {user?.unreadCount > 99 ? '99+' : user?.unreadCount}
           </span>
         ) : (
           <span />
         )}
         <span className="self-center text-xs font-medium text-gray-500">
-          {lastMessage.timestamp}
+          {lastMessage?.timestamp}
         </span>
         <span
           className={cn(
             'col-span-3 text-ellipsis overflow-hidden text-nowrap text-sm self-center font-medium',
-            user.unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
+            user?.unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
           )}
         >
-          {lastMessage.content}
+          {lastMessage?.content}
         </span>
       </div>
     </button>

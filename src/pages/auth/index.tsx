@@ -28,6 +28,7 @@ export default function Auth() {
 
     if (user?.isNewUser) {
       await setDoc(doc(db, 'users', userCredential?.user.uid), {
+        uid: userCredential?.user.uid,
         name: user?.profile?.name,
         email: user?.profile?.email,
         picture: user?.profile?.picture,
