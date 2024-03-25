@@ -23,6 +23,7 @@ export const userConverter: FirestoreDataConverter<User> = {
 }
 
 export type Chat = {
+  id: string
   lastMessage: {
     content: string
     timestamp: string

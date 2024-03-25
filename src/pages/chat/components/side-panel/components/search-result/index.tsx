@@ -40,7 +40,7 @@ export default function SearchResult({
                 return user?.name?.toLowerCase().includes(search.toLowerCase())
               })
               // eslint-disable-next-line react/jsx-key
-              .map((chat) => <ChatItem {...chat} />)
+              .map((chat) => <ChatItem chat={chat} />)
           )}
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function SearchResult({
         </div>
         <div>
           {newChats?.map((user) => (
-            <ChatItem key={user.uid} members={[user]} />
+            <ChatItem key={user.uid} chat={{ members: [user] }} />
           ))}
         </div>
       </div>

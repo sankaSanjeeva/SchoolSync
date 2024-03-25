@@ -1,4 +1,3 @@
-import { Children } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, query, where } from 'firebase/firestore'
@@ -14,9 +13,14 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
 import { auth, db } from '@/firebase'
-import { chatConverter } from '@/types'
+import { Chat, chatConverter } from '@/types'
 
-export default function SidePanel() {
+interface Props {
+  selectedChat?: Partial<Chat>
+  onSelectChat?: (chat: Partial<Chat> | undefined) => void
+}
+
+export default function SidePanel({ selectedChat, onSelectChat }: Props) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [chats, loading] = useCollectionData(
@@ -78,10 +82,14 @@ export default function SidePanel() {
                 </div>
               ) : (
                 <ScrollArea className="h-[calc(100vh_-_176px)]">
-                  {Children.toArray(
-                    // eslint-disable-next-line react/jsx-key
-                    chats?.map((chat) => <ChatItem {...chat} />)
-                  )}
+                  {chats?.map((chat) => (
+                    <ChatItem
+                      key={chat.id}
+                      chat={chat}
+                      selectedChat={selectedChat}
+                      onSelectChat={onSelectChat}
+                    />
+                  ))}
                 </ScrollArea>
               )}
             </TabsContent>
