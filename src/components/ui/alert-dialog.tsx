@@ -50,7 +50,7 @@ function AlertDialogHeader({
   return (
     <div
       className={cn(
-        'flex flex-col space-y-2 text-center sm:text-left',
+        'flex flex-col space-y-2 text-center sm:text-left dark:text-white',
         className
       )}
       {...props}
@@ -120,7 +120,7 @@ const AlertDialogCancel = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants({ variant: 'outline' }),
-      'mt-2 sm:mt-0',
+      'mt-2 sm:mt-0 dark:text-white',
       className
     )}
     {...props}

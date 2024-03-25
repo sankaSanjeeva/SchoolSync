@@ -39,6 +39,8 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off',
     'import/extensions': 'off',
+    'react/require-default-props': 'off',
+    'react/jsx-props-no-spreading': 'off',
   },
   ignorePatterns: ['postcss.config.js', 'tailwind.config.js', 'vite.config.ts'],
 }

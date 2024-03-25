@@ -30,9 +30,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useTheme } from '@/lib/theme'
 
 export default function TopIcons() {
   const [showLogOutConfirmation, setShowLogOutConfirmation] = useState(false)
+
+  const { setTheme } = useTheme()
 
   const handleSignOut = () => {
     signOut(auth)
@@ -53,19 +56,19 @@ export default function TopIcons() {
         <DropdownMenuContent>
           <DropdownMenuGroup>
             <DropdownMenuLabel>Theme</DropdownMenuLabel>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('light')}>
               Light
               <DropdownMenuShortcut>
                 <LightModeIcon />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('dark')}>
               Dark
               <DropdownMenuShortcut>
                 <DarkModeIcon />
               </DropdownMenuShortcut>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('system')}>
               System
               <DropdownMenuShortcut>
                 <SystemModeIcon />
