@@ -8,7 +8,7 @@ export default function Chat() {
   return (
     <div className="flex max-w-screen-lg mx-auto h-screen">
       <SidePanel selectedChat={selectedChat} onSelectChat={setSelectedChat} />
-      <ChatWindow chat={selectedChat} />
+      <ChatWindow chat={selectedChat} onCreateChat={setSelectedChat} />
     </div>
   )
 }

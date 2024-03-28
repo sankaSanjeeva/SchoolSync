@@ -24,19 +24,34 @@ export const userConverter: FirestoreDataConverter<User> = {
 
 export type Chat = {
   id: string
-  lastMessage: {
+  memberIDs: User['uid'][]
+  members: (Partial<User> & { unreadCount?: number | null })[]
+  lastMessage?: {
     content: string
     timestamp: string
   }
-  memberIDs: string[]
-  members: (Partial<User> & { unreadCount?: number | null })[]
 }
 
 export const chatConverter: FirestoreDataConverter<Chat> = {
-  toFirestore(post: Chat): DocumentData {
-    return post
+  toFirestore(chat: Chat): DocumentData {
+    return chat
   },
   fromFirestore(snapshot: QueryDocumentSnapshot): Chat {
     return snapshot.data() as Chat
+  },
+}
+
+export type Message = {
+  senderID: User['uid']
+  content: string
+  timestamp: string | number
+}
+
+export const messageConverter: FirestoreDataConverter<Message> = {
+  toFirestore(chat: Message): DocumentData {
+    return chat
+  },
+  fromFirestore(snapshot: QueryDocumentSnapshot): Message {
+    return snapshot.data() as Message
   },
 }

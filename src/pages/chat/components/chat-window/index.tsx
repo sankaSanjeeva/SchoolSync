@@ -1,19 +1,80 @@
-import { ChangeEvent } from 'react'
-import { auth } from '@/firebase'
-import { Chat } from '@/types'
+import { ChangeEvent, useState } from 'react'
+import { addDoc, collection, getDoc, updateDoc } from 'firebase/firestore'
+import { auth, db } from '@/firebase'
+import { Chat, Message, chatConverter, messageConverter } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MoreIcon, PaperclipIcon, SmileyIcon } from '@/assets/icons'
+import { MoreIcon, PaperclipIcon, SendIcon, SmileyIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
 const active = true
 
-export default function ChatWindow({ chat }: { chat?: Partial<Chat> }) {
+interface Props {
+  chat?: Partial<Chat>
+  onCreateChat: (chat: Props['chat']) => void
+}
+
+export default function ChatWindow({ chat, onCreateChat }: Props) {
+  const [text, setText] = useState('')
+
   const receiver = chat?.members?.find((u) => u.uid !== auth.currentUser?.uid)
 
   const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
     e.target.style.height = 'inherit'
     e.target.style.height = `${Math.min(e.target.scrollHeight, 400)}px`
+    setText(e.target.value)
+  }
+
+  const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
+    return addDoc(
+      collection(db, `chats/${chatID}/messages`).withConverter(
+        messageConverter
+      ),
+      {
+        senderID,
+        content: text,
+        timestamp: +new Date(),
+      }
+    )
+  }
+
+  const handleClickSend = async () => {
+    const { currentUser } = auth
+
+    if (!currentUser) {
+      throw new Error('currentUser is not defined')
+    }
+
+    if (!chat?.id) {
+      const newChatRef = await addDoc(
+        collection(db, 'chats').withConverter(chatConverter),
+        {
+          id: '',
+          memberIDs: [
+            ...(chat?.members?.map((x) => x.uid!) ?? []),
+            currentUser?.uid,
+          ],
+          members: [
+            ...(chat?.members ?? []),
+            {
+              email: currentUser?.email?.toString(),
+              name: currentUser?.displayName?.toString(),
+              picture: currentUser?.photoURL?.toString(),
+              uid: currentUser?.uid,
+            },
+          ],
+        }
+      )
+
+      await sendMessage(newChatRef.id, currentUser?.uid)
+      await updateDoc(newChatRef, { id: newChatRef.id })
+      const doc = await getDoc(newChatRef)
+      onCreateChat(doc.data())
+    } else {
+      await sendMessage(chat.id, currentUser?.uid)
+    }
+
+    setText('')
   }
 
   return (
@@ -63,11 +124,23 @@ export default function ChatWindow({ chat }: { chat?: Partial<Chat> }) {
                 </Button>
               }
               endAdornment={
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <PaperclipIcon />
-                </Button>
+                text ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={handleClickSend}
+                  >
+                    <SendIcon className="text-gray-500" />
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <PaperclipIcon />
+                  </Button>
+                )
               }
               className="px-[54px] py-3"
+              value={text}
               onChange={handleInput}
             />
           </div>

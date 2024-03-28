@@ -17,7 +17,7 @@ import { Chat, chatConverter } from '@/types'
 
 interface Props {
   selectedChat?: Partial<Chat>
-  onSelectChat?: (chat: Partial<Chat> | undefined) => void
+  onSelectChat?: (chat?: Partial<Chat>) => void
 }
 
 export default function SidePanel({ selectedChat, onSelectChat }: Props) {
@@ -45,6 +45,14 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
     })
   }
 
+  const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
+    onSelectChat?.(chat)
+    setSearchParams((params) => {
+      params.delete('search')
+      return params
+    })
+  }
+
   return (
     <aside className="w-[300px]">
       <TopIcons />
@@ -62,7 +70,11 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
 
       <div className="mt-3">
         {search ? (
-          <SearchResult chats={chats} search={search} />
+          <SearchResult
+            chats={chats}
+            search={search}
+            onSelectChat={handleSelectSearchedChat}
+          />
         ) : (
           <Tabs
             defaultValue={Tab.ALL}
