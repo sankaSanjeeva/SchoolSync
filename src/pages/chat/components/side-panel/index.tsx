@@ -54,7 +54,7 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
   }
 
   return (
-    <aside className="w-[300px]">
+    <aside className="w-[300px] flex-shrink-0">
       <TopIcons />
 
       <div className="px-5">

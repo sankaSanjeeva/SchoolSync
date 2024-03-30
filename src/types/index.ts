@@ -3,7 +3,7 @@ import {
   FirestoreDataConverter,
   QueryDocumentSnapshot,
 } from 'firebase/firestore'
-import { Role } from '@/enums'
+import { ChatType, MsgStatus, Role } from '@/enums'
 
 export type User = {
   uid: string
@@ -24,11 +24,12 @@ export const userConverter: FirestoreDataConverter<User> = {
 
 export type Chat = {
   id: string
+  type: ChatType
   memberIDs: User['uid'][]
   members: (Partial<User> & { unreadCount?: number | null })[]
   lastMessage?: {
     content: string
-    timestamp: string
+    timestamp: number
   }
 }
 
@@ -44,7 +45,8 @@ export const chatConverter: FirestoreDataConverter<Chat> = {
 export type Message = {
   senderID: User['uid']
   content: string
-  timestamp: string | number
+  timestamp: number
+  status: MsgStatus
 }
 
 export const messageConverter: FirestoreDataConverter<Message> = {

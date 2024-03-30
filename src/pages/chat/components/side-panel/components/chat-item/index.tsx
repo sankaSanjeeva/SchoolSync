@@ -18,9 +18,9 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
     <button
       type="button"
       className={cn(
-        'p-[10px] pl-5 w-full text-left hover:bg-gray-100 dark:hover:bg-black transition-colors',
+        'p-[10px] pl-5 w-full text-left hover:bg-gray-200 dark:hover:bg-black transition-colors',
         chat?.id === selectedChat?.id &&
-          'bg-gray-100 dark:bg-black transition-colors'
+          'bg-gray-200 dark:bg-black transition-colors'
       )}
       onClick={() => onSelectChat?.(chat)}
     >

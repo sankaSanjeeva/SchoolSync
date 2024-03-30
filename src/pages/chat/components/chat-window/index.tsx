@@ -1,11 +1,22 @@
 import { ChangeEvent, useState } from 'react'
-import { addDoc, collection, getDoc, updateDoc } from 'firebase/firestore'
+import {
+  addDoc,
+  collection,
+  getDoc,
+  orderBy,
+  query,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
+import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { auth, db } from '@/firebase'
 import { Chat, Message, chatConverter, messageConverter } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MoreIcon, PaperclipIcon, SendIcon, SmileyIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { ChatType, MsgStatus } from '@/enums'
+import { ChatBubble } from './components'
 
 const active = true
 
@@ -17,6 +28,16 @@ interface Props {
 export default function ChatWindow({ chat, onCreateChat }: Props) {
   const [text, setText] = useState('')
 
+  const q = query(
+    collection(db, `chats/${chat?.id}/messages`).withConverter(
+      messageConverter
+    ),
+    where('status', '==', MsgStatus.ACTIVE),
+    orderBy('timestamp', 'desc')
+  )
+
+  const [messages] = useCollectionData(q)
+
   const receiver = chat?.members?.find((u) => u.uid !== auth.currentUser?.uid)
 
   const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -26,6 +47,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
   }
 
   const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
+    setText('')
     return addDoc(
       collection(db, `chats/${chatID}/messages`).withConverter(
         messageConverter
@@ -34,6 +56,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
         senderID,
         content: text,
         timestamp: +new Date(),
+        status: MsgStatus.ACTIVE,
       }
     )
   }
@@ -50,6 +73,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
         collection(db, 'chats').withConverter(chatConverter),
         {
           id: '',
+          type: ChatType.PERSONAL,
           memberIDs: [
             ...(chat?.members?.map((x) => x.uid!) ?? []),
             currentUser?.uid,
@@ -73,8 +97,6 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     } else {
       await sendMessage(chat.id, currentUser?.uid)
     }
-
-    setText('')
   }
 
   return (
@@ -99,17 +121,16 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
 
           {/* <ScrollArea className="h-full"> */}
 
-          <div className="flex flex-col-reverse overflow-auto">
-            <div className="p-10">hello1</div>
-            <div className="p-10">hello2</div>
-            <div className="p-10">hello3</div>
-            <div className="p-10">hello4</div>
-            <div className="p-10">hello5</div>
-            <div className="p-10">hello6</div>
-            <div className="p-10">hello7</div>
-            <div className="p-10">hello8</div>
-            <div className="p-10">hello9</div>
-            <div className="p-10">hello</div>
+          <div className="flex-grow flex flex-col-reverse gap-5 overflow-auto">
+            {messages?.map((message, i) => (
+              <ChatBubble
+                key={message.timestamp}
+                message={message}
+                prevMsgSender={messages[i + 1]?.senderID}
+                members={chat.members}
+                type={chat.type}
+              />
+            ))}
           </div>
 
           {/* </ScrollArea> */}

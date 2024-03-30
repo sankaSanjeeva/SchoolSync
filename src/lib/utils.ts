@@ -5,3 +5,14 @@ import { twMerge } from 'tailwind-merge'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function formateTime(date: Date | number) {
+  if (Number.isNaN(Number(date))) {
+    return ''
+  }
+  return new Date(date).toLocaleString('en-US', {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  })
+}
