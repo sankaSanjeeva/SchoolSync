@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, query, where } from 'firebase/firestore'
@@ -52,6 +53,14 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
       return params
     })
   }
+
+  useEffect(() => {
+    const chat = chats?.find(({ id }) => id === selectedChat?.id)
+    if (chat) {
+      onSelectChat?.(chat)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats])
 
   return (
     <aside className="w-[300px] flex-shrink-0">

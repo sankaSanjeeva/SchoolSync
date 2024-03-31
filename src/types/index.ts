@@ -26,7 +26,7 @@ export type Chat = {
   id: string
   type: ChatType
   memberIDs: User['uid'][]
-  members: (Partial<User> & { unreadCount?: number | null })[]
+  members: (Partial<User> & { unreadCount: number })[]
   lastMessage?: {
     content: string
     timestamp: number

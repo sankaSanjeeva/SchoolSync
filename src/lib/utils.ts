@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formateTime(date: Date | number) {
-  if (Number.isNaN(Number(date))) {
+export function formateTime(date: Date | number | undefined) {
+  if (!date || Number.isNaN(Number(date))) {
     return ''
   }
   return new Date(date).toLocaleString('en-US', {

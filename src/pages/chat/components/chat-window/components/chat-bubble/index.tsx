@@ -56,7 +56,7 @@ export default function ChatBubble({
         </Avatar>
       )}
 
-      <div className="col-start-2 self-center rounded-lg p-3 bg-gray-300">
+      <div className="col-start-2 self-center rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors">
         {message.content}
       </div>
 

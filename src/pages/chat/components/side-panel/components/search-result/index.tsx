@@ -53,7 +53,7 @@ export default function SearchResult({
           {newChats?.map((user) => (
             <ChatItem
               key={user.uid}
-              chat={{ members: [user] }}
+              chat={{ members: [{ ...user, unreadCount: 0 }] }}
               onSelectChat={onSelectChat}
             />
           ))}

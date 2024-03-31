@@ -2,6 +2,7 @@ import { ChangeEvent, useState } from 'react'
 import {
   addDoc,
   collection,
+  doc,
   getDoc,
   orderBy,
   query,
@@ -75,27 +76,50 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           id: '',
           type: ChatType.PERSONAL,
           memberIDs: [
-            ...(chat?.members?.map((x) => x.uid!) ?? []),
+            ...(chat?.members ?? []).map((member) => member.uid!),
             currentUser?.uid,
           ],
           members: [
-            ...(chat?.members ?? []),
+            ...(chat?.members ?? []).map((member) => ({
+              ...member,
+              unreadCount: 1,
+            })),
             {
               email: currentUser?.email?.toString(),
               name: currentUser?.displayName?.toString(),
               picture: currentUser?.photoURL?.toString(),
               uid: currentUser?.uid,
+              unreadCount: 0,
             },
           ],
+          lastMessage: {
+            content: text,
+            timestamp: +new Date(),
+          },
         }
       )
 
       await sendMessage(newChatRef.id, currentUser?.uid)
       await updateDoc(newChatRef, { id: newChatRef.id })
-      const doc = await getDoc(newChatRef)
-      onCreateChat(doc.data())
+      const document = await getDoc(newChatRef)
+      onCreateChat(document.data())
     } else {
-      await sendMessage(chat.id, currentUser?.uid)
+      sendMessage(chat.id, currentUser?.uid)
+      updateDoc(doc(db, `chats/${chat.id}`), {
+        lastMessage: {
+          content: text,
+          timestamp: +new Date(),
+        },
+        members: chat.members?.map((member) => {
+          if (member.uid === currentUser.uid) {
+            return member
+          }
+          return {
+            ...member,
+            unreadCount: member.unreadCount + 1,
+          }
+        }),
+      })
     }
   }
 
@@ -121,7 +145,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
 
           {/* <ScrollArea className="h-full"> */}
 
-          <div className="flex-grow flex flex-col-reverse gap-5 overflow-auto">
+          <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto">
             {messages?.map((message, i) => (
               <ChatBubble
                 key={message.timestamp}

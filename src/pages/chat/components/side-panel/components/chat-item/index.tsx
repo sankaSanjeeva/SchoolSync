@@ -1,6 +1,7 @@
+import { useMemo } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
-import { cn } from '@/lib/utils'
+import { cn, formateTime } from '@/lib/utils'
 import { Chat } from '@/types'
 
 const active = true
@@ -13,6 +14,11 @@ interface Props {
 
 export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
   const user = chat?.members?.filter((x) => x.uid !== auth.currentUser?.uid)[0]
+
+  const currentUser = useMemo(
+    () => chat?.members?.find((member) => member.uid === auth.currentUser?.uid),
+    [chat?.members]
+  )
 
   return (
     <button
@@ -36,22 +42,24 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
           {user?.name}
         </span>
 
-        {user?.unreadCount ? (
+        {currentUser?.unreadCount ? (
           <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-green-500">
-            {user?.unreadCount > 99 ? '99+' : user?.unreadCount}
+            {currentUser?.unreadCount > 99 ? '99+' : currentUser?.unreadCount}
           </span>
         ) : (
           <span />
         )}
 
         <span className="text-xs font-medium text-gray-500">
-          {chat?.lastMessage?.timestamp}
+          {formateTime(chat?.lastMessage?.timestamp)}
         </span>
 
         <span
           className={cn(
             'col-span-3 text-ellipsis overflow-hidden text-nowrap text-sm font-medium',
-            user?.unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
+            currentUser?.unreadCount
+              ? 'text-black dark:text-white'
+              : 'text-gray-400'
           )}
         >
           {chat?.lastMessage?.content}
