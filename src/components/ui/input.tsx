@@ -8,7 +8,7 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: '',
-        search: 'rounded-full bg-gray-100 dark:bg-black',
+        search: 'rounded-full bg-gray-200 dark:bg-black',
         chat: 'rounded-full bg-white dark:bg-gray-900 shadow-lg',
       },
     },

@@ -1,4 +1,3 @@
-import { Children } from 'react'
 import { collection, query, where } from 'firebase/firestore'
 import { useCollectionDataOnce } from 'react-firebase-hooks/firestore'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -9,9 +8,11 @@ import { auth, db } from '@/firebase'
 export default function SearchResult({
   chats,
   search,
+  onSelectChat,
 }: {
   chats?: Chat[]
   search: string
+  onSelectChat?: (chat?: Partial<Chat>) => void
 }) {
   const recipients =
     chats?.map((x) => x.memberIDs.find((y) => y !== auth.currentUser?.uid)) ??
@@ -31,17 +32,16 @@ export default function SearchResult({
           CHATS
         </div>
         <div>
-          {Children.toArray(
-            chats
-              ?.filter((u) => {
-                const user = u.members.find(
-                  (x) => x.uid !== auth.currentUser?.uid
-                )
-                return user?.name?.toLowerCase().includes(search.toLowerCase())
-              })
-              // eslint-disable-next-line react/jsx-key
-              .map((chat) => <ChatItem chat={chat} />)
-          )}
+          {chats
+            ?.filter((u) => {
+              const user = u.members.find(
+                (x) => x.uid !== auth.currentUser?.uid
+              )
+              return user?.name?.toLowerCase().includes(search.toLowerCase())
+            })
+            .map((chat) => (
+              <ChatItem key={chat.id} chat={chat} onSelectChat={onSelectChat} />
+            ))}
         </div>
       </div>
 
@@ -51,7 +51,11 @@ export default function SearchResult({
         </div>
         <div>
           {newChats?.map((user) => (
-            <ChatItem key={user.uid} chat={{ members: [user] }} />
+            <ChatItem
+              key={user.uid}
+              chat={{ members: [{ ...user, unreadCount: 0 }] }}
+              onSelectChat={onSelectChat}
+            />
           ))}
         </div>
       </div>

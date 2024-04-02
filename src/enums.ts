@@ -9,3 +9,16 @@ export enum Tab {
   PRIVATE = 'private',
   GROUP = 'group',
 }
+
+export enum ChatType {
+  PERSONAL = 'personal',
+  GROUP = 'group',
+}
+
+export enum MsgStatus {
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read',
+  DELETED = 'deleted',
+  EDITED = 'edited',
+}

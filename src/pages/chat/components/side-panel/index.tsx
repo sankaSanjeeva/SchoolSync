@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, query, where } from 'firebase/firestore'
@@ -17,7 +18,7 @@ import { Chat, chatConverter } from '@/types'
 
 interface Props {
   selectedChat?: Partial<Chat>
-  onSelectChat?: (chat: Partial<Chat> | undefined) => void
+  onSelectChat?: (chat?: Partial<Chat>) => void
 }
 
 export default function SidePanel({ selectedChat, onSelectChat }: Props) {
@@ -45,8 +46,24 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
     })
   }
 
+  const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
+    onSelectChat?.(chat)
+    setSearchParams((params) => {
+      params.delete('search')
+      return params
+    })
+  }
+
+  useEffect(() => {
+    const chat = chats?.find(({ id }) => id === selectedChat?.id)
+    if (chat) {
+      onSelectChat?.(chat)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats])
+
   return (
-    <aside className="w-[300px]">
+    <aside className="w-[300px] flex-shrink-0">
       <TopIcons />
 
       <div className="px-5">
@@ -62,7 +79,11 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
 
       <div className="mt-3">
         {search ? (
-          <SearchResult chats={chats} search={search} />
+          <SearchResult
+            chats={chats}
+            search={search}
+            onSelectChat={handleSelectSearchedChat}
+          />
         ) : (
           <Tabs
             defaultValue={Tab.ALL}
