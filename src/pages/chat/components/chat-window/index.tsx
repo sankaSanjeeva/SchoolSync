@@ -1,11 +1,10 @@
 import { ChangeEvent, useState } from 'react'
 import {
-  addDoc,
   collection,
   doc,
-  getDoc,
   orderBy,
   query,
+  setDoc,
   updateDoc,
   where,
 } from 'firebase/firestore'
@@ -17,6 +16,7 @@ import { MoreIcon, PaperclipIcon, SendIcon, SmileyIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ChatType, MsgStatus } from '@/enums'
+import { generateId } from '@/lib/utils'
 import { ChatBubble } from './components'
 
 const active = true
@@ -33,7 +33,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     collection(db, `chats/${chat?.id}/messages`).withConverter(
       messageConverter
     ),
-    where('status', '==', MsgStatus.ACTIVE),
+    where('status', 'in', [MsgStatus.EDITED, MsgStatus.READ, MsgStatus.SENT]),
     orderBy('timestamp', 'desc')
   )
 
@@ -49,15 +49,15 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
 
   const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
     setText('')
-    return addDoc(
-      collection(db, `chats/${chatID}/messages`).withConverter(
-        messageConverter
-      ),
+    const id = generateId()
+    return setDoc(
+      doc(db, `chats/${chatID}/messages/${id}`).withConverter(messageConverter),
       {
+        id,
         senderID,
         content: text,
         timestamp: +new Date(),
-        status: MsgStatus.ACTIVE,
+        status: MsgStatus.SENT,
       }
     )
   }
@@ -70,39 +70,35 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     }
 
     if (!chat?.id) {
-      const newChatRef = await addDoc(
-        collection(db, 'chats').withConverter(chatConverter),
-        {
-          id: '',
-          type: ChatType.PERSONAL,
-          memberIDs: [
-            ...(chat?.members ?? []).map((member) => member.uid!),
-            currentUser?.uid,
-          ],
-          members: [
-            ...(chat?.members ?? []).map((member) => ({
-              ...member,
-              unreadCount: 1,
-            })),
-            {
-              email: currentUser?.email?.toString(),
-              name: currentUser?.displayName?.toString(),
-              picture: currentUser?.photoURL?.toString(),
-              uid: currentUser?.uid,
-              unreadCount: 0,
-            },
-          ],
-          lastMessage: {
-            content: text,
-            timestamp: +new Date(),
+      const id = generateId()
+      const newChat = {
+        id,
+        type: ChatType.PERSONAL,
+        memberIDs: [
+          ...(chat?.members ?? []).map((member) => member.uid!),
+          currentUser?.uid,
+        ],
+        members: [
+          ...(chat?.members ?? []).map((member) => ({
+            ...member,
+            unreadCount: 1,
+          })),
+          {
+            email: currentUser?.email?.toString(),
+            name: currentUser?.displayName?.toString(),
+            picture: currentUser?.photoURL?.toString(),
+            uid: currentUser?.uid,
+            unreadCount: 0,
           },
-        }
-      )
-
-      await sendMessage(newChatRef.id, currentUser?.uid)
-      await updateDoc(newChatRef, { id: newChatRef.id })
-      const document = await getDoc(newChatRef)
-      onCreateChat(document.data())
+        ],
+        lastMessage: {
+          content: text,
+          timestamp: +new Date(),
+        },
+      }
+      await setDoc(doc(db, `chats/${id}`).withConverter(chatConverter), newChat)
+      sendMessage(id, currentUser?.uid)
+      onCreateChat(newChat)
     } else {
       sendMessage(chat.id, currentUser?.uid)
       updateDoc(doc(db, `chats/${chat.id}`), {
@@ -148,11 +144,12 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto">
             {messages?.map((message, i) => (
               <ChatBubble
-                key={message.timestamp}
+                key={message.id}
                 message={message}
                 prevMsgSender={messages[i + 1]?.senderID}
                 members={chat.members}
                 type={chat.type}
+                id={chat.id}
               />
             ))}
           </div>

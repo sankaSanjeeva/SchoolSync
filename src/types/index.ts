@@ -43,6 +43,7 @@ export const chatConverter: FirestoreDataConverter<Chat> = {
 }
 
 export type Message = {
+  id: string
   senderID: User['uid']
   content: string
   timestamp: number

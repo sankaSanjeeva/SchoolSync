@@ -16,7 +16,9 @@ export enum ChatType {
 }
 
 export enum MsgStatus {
-  ACTIVE = 'active',
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read',
   DELETED = 'deleted',
   EDITED = 'edited',
 }
