@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useMemo, useState } from 'react'
 import {
   collection,
   doc,
@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ChatType, MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
 import { ChatBubble } from './components'
+import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
 
 const active = true
 
@@ -37,9 +38,12 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     orderBy('timestamp', 'desc')
   )
 
-  const [messages] = useCollectionData(q)
+  const [messages, loading] = useCollectionData(q)
 
-  const receiver = chat?.members?.find((u) => u.uid !== auth.currentUser?.uid)
+  const conversant = useMemo(
+    () => chat?.members?.find((u) => u.uid !== auth.currentUser?.uid),
+    [chat?.members]
+  )
 
   const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
     e.target.style.height = 'inherit'
@@ -126,13 +130,13 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center bg-white dark:bg-gray-900">
             <div className="row-span-2">
               <Avatar active={active}>
-                <AvatarImage src={receiver?.picture} />
+                <AvatarImage src={conversant?.picture} />
                 <AvatarFallback>
-                  {receiver?.name?.at(0)?.toUpperCase()}
+                  {conversant?.name?.at(0)?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <span>{receiver?.name}</span>
+            <span>{conversant?.name}</span>
             <Button variant="ghost" size="icon" className="row-span-2">
               <MoreIcon />
             </Button>
@@ -142,6 +146,14 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           {/* <ScrollArea className="h-full"> */}
 
           <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto">
+            {loading &&
+              [1, 2, 3].map((x) => (
+                <ChatBubbleSkeleton
+                  type={chat.type}
+                  key={x}
+                  isCurrentUser={Math.random() < 0.5}
+                />
+              ))}
             {messages?.map((message, i) => (
               <ChatBubble
                 key={message.id}

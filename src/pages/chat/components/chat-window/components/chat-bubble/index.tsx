@@ -87,7 +87,7 @@ export default function ChatBubble({
       )}
 
       {showConversantInfo && (
-        <Avatar className={cn('mr-3', isSameSender && 'invisible')}>
+        <Avatar className={cn('mr-3 w-12 h-12', isSameSender && 'invisible')}>
           <AvatarImage src={sender?.picture} />
           <AvatarFallback>{sender?.name?.at(0)?.toUpperCase()}</AvatarFallback>
         </Avatar>
