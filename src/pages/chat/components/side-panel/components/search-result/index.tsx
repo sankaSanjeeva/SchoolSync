@@ -1,28 +1,37 @@
-import { collection, query, where } from 'firebase/firestore'
-import { useCollectionDataOnce } from 'react-firebase-hooks/firestore'
+import { useMemo } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ChatItem from '../chat-item'
-import { Chat, userConverter } from '@/types'
-import { auth, db } from '@/firebase'
+import { Chat, User } from '@/types'
+import { auth } from '@/firebase'
 
 export default function SearchResult({
   chats,
   search,
+  userWithNoChats,
   onSelectChat,
 }: {
-  chats?: Chat[]
+  chats: Chat[] | undefined
   search: string
+  userWithNoChats: User[] | undefined
   onSelectChat?: (chat?: Partial<Chat>) => void
 }) {
-  const recipients =
-    chats?.map((x) => x.memberIDs.find((y) => y !== auth.currentUser?.uid)) ??
-    []
+  const filteredChats = useMemo(
+    () =>
+      chats?.filter((chat) => {
+        const user = chat.members.find(
+          (member) => member.uid !== auth.currentUser?.uid
+        )
+        return user?.name?.toLowerCase().includes(search.toLowerCase())
+      }),
+    [chats, search]
+  )
 
-  const [newChats] = useCollectionDataOnce(
-    query(
-      collection(db, 'users').withConverter(userConverter),
-      where('uid', 'not-in', [...recipients, auth.currentUser?.uid])
-    )
+  const filteredUsersWithNoChat = useMemo(
+    () =>
+      userWithNoChats?.filter((user) =>
+        user.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [userWithNoChats, search]
   )
 
   return (
@@ -32,16 +41,9 @@ export default function SearchResult({
           CHATS
         </div>
         <div>
-          {chats
-            ?.filter((u) => {
-              const user = u.members.find(
-                (x) => x.uid !== auth.currentUser?.uid
-              )
-              return user?.name?.toLowerCase().includes(search.toLowerCase())
-            })
-            .map((chat) => (
-              <ChatItem key={chat.id} chat={chat} onSelectChat={onSelectChat} />
-            ))}
+          {filteredChats?.map((chat) => (
+            <ChatItem key={chat.id} chat={chat} onSelectChat={onSelectChat} />
+          ))}
         </div>
       </div>
 
@@ -50,7 +52,7 @@ export default function SearchResult({
           NEW CHATS
         </div>
         <div>
-          {newChats?.map((user) => (
+          {filteredUsersWithNoChat?.map((user) => (
             <ChatItem
               key={user.uid}
               chat={{ members: [{ ...user, unreadCount: 0 }] }}
