@@ -13,7 +13,7 @@ const Avatar = React.forwardRef<
     className={cn(
       'relative flex w-fit',
       active &&
-        'after:content-[""] after:w-2 after:h-2 after:rounded-full after:bg-green-500 after:absolute after:bottom-[7%] after:right-[7%] after:outline after:outline-2 after:outline-white dark:after:outline-black'
+        'after:content-[""] after:w-2 after:h-2 after:rounded-full after:bg-theme after:absolute after:bottom-[7%] after:right-[7%] after:outline after:outline-2 after:outline-white dark:after:outline-black'
     )}
   >
     <AvatarPrimitive.Root

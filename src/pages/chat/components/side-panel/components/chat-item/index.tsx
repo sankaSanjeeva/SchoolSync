@@ -43,7 +43,7 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
         </span>
 
         {currentUser?.unreadCount ? (
-          <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-green-500">
+          <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-theme">
             {currentUser?.unreadCount > 99 ? '99+' : currentUser?.unreadCount}
           </span>
         ) : (

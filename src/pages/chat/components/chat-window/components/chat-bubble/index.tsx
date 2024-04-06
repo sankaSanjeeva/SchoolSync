@@ -6,6 +6,7 @@ import { Chat, Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
+import { DoubleTickIcon } from '@/assets/icons'
 
 interface Props extends Partial<Pick<Chat, 'id' | 'type' | 'members'>> {
   message: Message
@@ -92,8 +93,30 @@ export default function ChatBubble({
         </Avatar>
       )}
 
-      <div className="col-start-2 self-center rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors">
-        {message.content}
+      <div
+        className={cn(
+          'col-start-2 self-center relative rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors',
+          !isCurrentUser && 'bg-theme dark:bg-theme'
+        )}
+      >
+        <span
+          className={cn(
+            'text-black dark:text-gray-100',
+            !isCurrentUser && '!text-white'
+          )}
+        >
+          {message.content}
+        </span>
+
+        {isCurrentUser && (
+          <DoubleTickIcon
+            className={cn(
+              'absolute bottom-1 right-1 transition-colors',
+              [MsgStatus.READ, MsgStatus.EDITED].includes(message.status) &&
+                'text-theme'
+            )}
+          />
+        )}
       </div>
 
       <div

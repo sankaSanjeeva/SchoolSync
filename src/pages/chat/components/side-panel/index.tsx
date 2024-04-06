@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { collection, query, where } from 'firebase/firestore'
+import { collection, orderBy, query, where } from 'firebase/firestore'
 import { SearchIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,7 +27,8 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
   const [chats, loading] = useCollectionData(
     query(
       collection(db, 'chats').withConverter(chatConverter),
-      where('memberIDs', 'array-contains', auth.currentUser?.uid)
+      where('memberIDs', 'array-contains', auth.currentUser?.uid),
+      orderBy('lastMessage.timestamp', 'desc')
     )
   )
 
