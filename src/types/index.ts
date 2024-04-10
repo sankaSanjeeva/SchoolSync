@@ -11,6 +11,8 @@ export type User = {
   email: string
   picture: string
   role: Role
+  onlineStatus: boolean
+  onlineStatusChanged: number
 }
 
 export const userConverter: FirestoreDataConverter<User> = {
