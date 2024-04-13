@@ -1,38 +1,57 @@
 import { useMemo } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ChatItem from '../chat-item'
-import { Chat, User } from '@/types'
+import { Chat } from '@/types'
 import { auth } from '@/firebase'
+import { useUser } from '@/hooks/user'
 
 export default function SearchResult({
   chats,
   search,
-  userWithNoChats,
   onSelectChat,
 }: {
   chats: Chat[] | undefined
   search: string
-  userWithNoChats: User[] | undefined
   onSelectChat?: (chat?: Partial<Chat>) => void
 }) {
+  const { users } = useUser()
+
   const filteredChats = useMemo(
     () =>
       chats?.filter((chat) => {
-        const user = chat.members.find(
-          (member) => member.uid !== auth.currentUser?.uid
+        const uid = chat.participants.find(
+          (participant) => participant !== auth.currentUser?.uid
         )
-        return user?.name?.toLowerCase().includes(search.toLowerCase())
+        return users
+          .find((user) => user.uid === uid)
+          ?.name?.toLowerCase()
+          .includes(search.toLowerCase())
       }),
-    [chats, search]
+    [chats, search, users]
   )
 
-  const filteredUsersWithNoChat = useMemo(
+  const conversances = useMemo(
     () =>
-      userWithNoChats?.filter((user) =>
-        user.name.toLowerCase().includes(search.toLowerCase())
-      ),
-    [userWithNoChats, search]
+      chats?.map((x) =>
+        x.participants.find((y) => y !== auth.currentUser?.uid)
+      ) ?? [],
+    [chats]
   )
+
+  const usersWithNoChats = useMemo(
+    () =>
+      users.filter(
+        (user) =>
+          !conversances.includes(user.uid) && user.uid !== auth.currentUser?.uid
+      ),
+    [conversances, users]
+  )
+
+  const filteredUsersWithNoChat = useMemo(() => {
+    return usersWithNoChats.filter((user) =>
+      user.name.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [usersWithNoChats, search])
 
   return (
     <ScrollArea className="h-[calc(100vh_-_132px)]">
@@ -55,7 +74,7 @@ export default function SearchResult({
           {filteredUsersWithNoChat?.map((user) => (
             <ChatItem
               key={user.uid}
-              chat={{ members: [{ ...user, unreadCount: 0 }] }}
+              chat={{ participants: [user.uid] }}
               onSelectChat={onSelectChat}
             />
           ))}

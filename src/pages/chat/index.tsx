@@ -3,6 +3,7 @@ import { onDisconnect, onValue, ref, update } from 'firebase/database'
 import { ChatWindow, SidePanel } from './components'
 import { Chat as C } from '@/types'
 import { auth, database } from '@/firebase'
+import { UserProvider } from '@/hooks/user'
 
 export default function Chat() {
   const [selectedChat, setSelectedChat] = useState<Partial<C>>()
@@ -21,13 +22,13 @@ export default function Chat() {
 
         onDisconnect(userRef)
           .update({
-            onlineStatus: false,
-            onlineStatusChanged: +new Date(),
+            online: false,
+            lastOnline: +new Date(),
           })
           .then(() => {
             update(userRef, {
-              onlineStatus: true,
-              onlineStatusChanged: +new Date(),
+              online: true,
+              lastOnline: +new Date(),
             })
           })
       }
@@ -35,8 +36,8 @@ export default function Chat() {
 
     return () => {
       update(userRef, {
-        onlineStatus: false,
-        onlineStatusChanged: +new Date(),
+        online: false,
+        lastOnline: +new Date(),
       })
       unsubscribe()
     }
@@ -44,9 +45,11 @@ export default function Chat() {
   }, [])
 
   return (
-    <div className="flex max-w-screen-lg mx-auto h-screen">
-      <SidePanel selectedChat={selectedChat} onSelectChat={setSelectedChat} />
-      <ChatWindow chat={selectedChat} onCreateChat={setSelectedChat} />
-    </div>
+    <UserProvider>
+      <div className="flex max-w-screen-lg mx-auto h-screen">
+        <SidePanel selectedChat={selectedChat} onSelectChat={setSelectedChat} />
+        <ChatWindow chat={selectedChat} onCreateChat={setSelectedChat} />
+      </div>
+    </UserProvider>
   )
 }

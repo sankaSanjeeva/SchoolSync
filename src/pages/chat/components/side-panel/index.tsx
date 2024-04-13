@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, orderBy, query, where } from 'firebase/firestore'
@@ -14,7 +14,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
 import { auth, db } from '@/firebase'
-import { Chat, chatConverter, userConverter } from '@/types'
+import { Chat, chatConverter } from '@/types'
 
 interface Props {
   selectedChat?: Partial<Chat>
@@ -27,22 +27,8 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
   const [chats, loading] = useCollectionData(
     query(
       collection(db, 'chats').withConverter(chatConverter),
-      where('memberIDs', 'array-contains', auth.currentUser?.uid),
+      where('participants', 'array-contains', auth.currentUser?.uid),
       orderBy('lastMessage.timestamp', 'desc')
-    )
-  )
-
-  const conversances = useMemo(
-    () =>
-      chats?.map((x) => x.memberIDs.find((y) => y !== auth.currentUser?.uid)) ??
-      [],
-    [chats]
-  )
-
-  const [userWithNoChats] = useCollectionData(
-    query(
-      collection(db, 'users').withConverter(userConverter),
-      where('uid', 'not-in', [...conversances, auth.currentUser?.uid])
     )
   )
 
@@ -97,7 +83,6 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
           <SearchResult
             chats={chats}
             search={search}
-            userWithNoChats={userWithNoChats}
             onSelectChat={handleSelectSearchedChat}
           />
         ) : (

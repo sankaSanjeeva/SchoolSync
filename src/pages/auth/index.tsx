@@ -33,8 +33,8 @@ export default function Auth() {
       email: user?.profile?.email as string,
       picture: user?.profile?.picture as string,
       role: Role.User,
-      onlineStatus: true,
-      onlineStatusChanged: +new Date(),
+      online: true,
+      lastOnline: +new Date(),
     }
 
     if (user?.isNewUser) {

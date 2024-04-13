@@ -11,8 +11,8 @@ export type User = {
   email: string
   picture: string
   role: Role
-  onlineStatus: boolean
-  onlineStatusChanged: number
+  online: boolean
+  lastOnline: number
 }
 
 export const userConverter: FirestoreDataConverter<User> = {
@@ -27,8 +27,8 @@ export const userConverter: FirestoreDataConverter<User> = {
 export type Chat = {
   id: string
   type: ChatType
-  memberIDs: User['uid'][]
-  members: (Partial<User> & { unreadCount: number })[]
+  participants: User['uid'][]
+  participantsMeta: (Pick<User, 'uid'> & { unreadCount: number })[]
   lastMessage?: {
     content: string
     timestamp: number

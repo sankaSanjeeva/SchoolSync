@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
 import { DoubleTickIcon } from '@/assets/icons'
+import { useUser } from '@/hooks/user'
 
-interface Props extends Partial<Pick<Chat, 'id' | 'type' | 'members'>> {
+interface Props
+  extends Partial<Pick<Chat, 'id' | 'type' | 'participantsMeta'>> {
   message: Message
   prevMsgSender: Message['senderID'] | undefined
 }
@@ -18,9 +20,10 @@ export default function ChatBubble({
   prevMsgSender,
   id: chatId,
   type,
-  members,
+  participantsMeta,
 }: Props) {
   const { ref, visible } = useElementIsVisible()
+  const { users } = useUser()
 
   const isCurrentUser = useMemo(
     () => auth.currentUser?.uid === message.senderID,
@@ -43,8 +46,9 @@ export default function ChatBubble({
   )
 
   const sender = useMemo(
-    () => members?.find((x) => x.uid === message.senderID),
-    [members, message.senderID]
+    () => users.find((user) => user.uid === message.senderID),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [message.senderID]
   )
 
   useEffect(() => {
@@ -54,18 +58,18 @@ export default function ChatBubble({
       })
 
       updateDoc(doc(db, `chats/${chatId}`), {
-        members: members?.map((member) => {
-          if (member.uid === auth.currentUser?.uid) {
+        participantsMeta: participantsMeta?.map((participant) => {
+          if (participant.uid === auth.currentUser?.uid) {
             return {
-              ...member,
+              uid: participant.uid,
               /**
                * Increase by one not working
                */
-              // unreadCount: member.unreadCount - 1,
+              // unreadCount: participant.unreadCount - 1,
               unreadCount: 0,
             }
           }
-          return member
+          return participant
         }),
       })
     }
