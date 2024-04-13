@@ -21,6 +21,7 @@ module.exports = {
         500: '#727272',
         900: '#131313',
       },
+      theme: '#36CE00',
     },
     container: {
       center: true,

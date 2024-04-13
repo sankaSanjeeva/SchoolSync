@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useMemo, useState } from 'react'
 import {
   collection,
   doc,
@@ -9,6 +9,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
+import { formatDistance } from 'date-fns'
 import { auth, db } from '@/firebase'
 import { Chat, Message, chatConverter, messageConverter } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -18,8 +19,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { ChatType, MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
 import { ChatBubble } from './components'
-
-const active = true
+import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
+import { useUser } from '@/hooks/user'
 
 interface Props {
   chat?: Partial<Chat>
@@ -29,6 +30,8 @@ interface Props {
 export default function ChatWindow({ chat, onCreateChat }: Props) {
   const [text, setText] = useState('')
 
+  const { users } = useUser()
+
   const q = query(
     collection(db, `chats/${chat?.id}/messages`).withConverter(
       messageConverter
@@ -37,9 +40,12 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     orderBy('timestamp', 'desc')
   )
 
-  const [messages] = useCollectionData(q)
+  const [messages, loading] = useCollectionData(q)
 
-  const receiver = chat?.members?.find((u) => u.uid !== auth.currentUser?.uid)
+  const conversant = useMemo(() => {
+    const uid = chat?.participants?.find((u) => u !== auth.currentUser?.uid)
+    return users.find((user) => user.uid === uid)
+  }, [chat?.participants, users])
 
   const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
     e.target.style.height = 'inherit'
@@ -74,19 +80,16 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
       const newChat = {
         id,
         type: ChatType.PERSONAL,
-        memberIDs: [
-          ...(chat?.members ?? []).map((member) => member.uid!),
-          currentUser?.uid,
+        participants: [
+          ...(chat?.participants ?? []).map((participant) => participant),
+          currentUser.uid,
         ],
-        members: [
-          ...(chat?.members ?? []).map((member) => ({
-            ...member,
+        participantsMeta: [
+          ...(chat?.participants ?? []).map((participant) => ({
+            uid: participant,
             unreadCount: 1,
           })),
           {
-            email: currentUser?.email?.toString(),
-            name: currentUser?.displayName?.toString(),
-            picture: currentUser?.photoURL?.toString(),
             uid: currentUser?.uid,
             unreadCount: 0,
           },
@@ -106,13 +109,13 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           content: text,
           timestamp: +new Date(),
         },
-        members: chat.members?.map((member) => {
-          if (member.uid === currentUser.uid) {
-            return member
+        participantsMeta: chat.participantsMeta?.map((participant) => {
+          if (participant.uid === currentUser.uid) {
+            return participant
           }
           return {
-            ...member,
-            unreadCount: member.unreadCount + 1,
+            ...participant,
+            unreadCount: participant.unreadCount + 1,
           }
         }),
       })
@@ -125,29 +128,47 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
         <div className="flex flex-col w-full">
           <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center bg-white dark:bg-gray-900">
             <div className="row-span-2">
-              <Avatar active={active}>
-                <AvatarImage src={receiver?.picture} />
+              <Avatar active={conversant?.online}>
+                <AvatarImage src={conversant?.picture} />
                 <AvatarFallback>
-                  {receiver?.name?.at(0)?.toUpperCase()}
+                  {conversant?.name?.at(0)?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <span>{receiver?.name}</span>
+            <span>{conversant?.name}</span>
             <Button variant="ghost" size="icon" className="row-span-2">
               <MoreIcon />
             </Button>
-            <span className="text-xs text-gray-400">Online</span>
+            <span className="text-xs text-gray-400">
+              {conversant?.online
+                ? 'Online'
+                : formatDistance(
+                    conversant?.lastOnline ?? new Date(),
+                    new Date(),
+                    {
+                      addSuffix: true,
+                    }
+                  )}
+            </span>
           </header>
 
           {/* <ScrollArea className="h-full"> */}
 
           <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto">
+            {loading &&
+              [1, 2, 3].map((x) => (
+                <ChatBubbleSkeleton
+                  type={chat.type}
+                  key={x}
+                  isCurrentUser={Math.random() < 0.5}
+                />
+              ))}
             {messages?.map((message, i) => (
               <ChatBubble
                 key={message.id}
                 message={message}
                 prevMsgSender={messages[i + 1]?.senderID}
-                members={chat.members}
+                participantsMeta={chat.participantsMeta}
                 type={chat.type}
                 id={chat.id}
               />

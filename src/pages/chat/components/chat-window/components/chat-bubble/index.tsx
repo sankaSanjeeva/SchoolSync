@@ -6,8 +6,11 @@ import { Chat, Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
+import { DoubleTickIcon } from '@/assets/icons'
+import { useUser } from '@/hooks/user'
 
-interface Props extends Partial<Pick<Chat, 'id' | 'type' | 'members'>> {
+interface Props
+  extends Partial<Pick<Chat, 'id' | 'type' | 'participantsMeta'>> {
   message: Message
   prevMsgSender: Message['senderID'] | undefined
 }
@@ -17,9 +20,10 @@ export default function ChatBubble({
   prevMsgSender,
   id: chatId,
   type,
-  members,
+  participantsMeta,
 }: Props) {
   const { ref, visible } = useElementIsVisible()
+  const { users } = useUser()
 
   const isCurrentUser = useMemo(
     () => auth.currentUser?.uid === message.senderID,
@@ -42,8 +46,9 @@ export default function ChatBubble({
   )
 
   const sender = useMemo(
-    () => members?.find((x) => x.uid === message.senderID),
-    [members, message.senderID]
+    () => users.find((user) => user.uid === message.senderID),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [message.senderID]
   )
 
   useEffect(() => {
@@ -53,18 +58,18 @@ export default function ChatBubble({
       })
 
       updateDoc(doc(db, `chats/${chatId}`), {
-        members: members?.map((member) => {
-          if (member.uid === auth.currentUser?.uid) {
+        participantsMeta: participantsMeta?.map((participant) => {
+          if (participant.uid === auth.currentUser?.uid) {
             return {
-              ...member,
+              uid: participant.uid,
               /**
                * Increase by one not working
                */
-              // unreadCount: member.unreadCount - 1,
+              // unreadCount: participant.unreadCount - 1,
               unreadCount: 0,
             }
           }
-          return member
+          return participant
         }),
       })
     }
@@ -86,14 +91,36 @@ export default function ChatBubble({
       )}
 
       {showConversantInfo && (
-        <Avatar className={cn('mr-3', isSameSender && 'invisible')}>
+        <Avatar className={cn('mr-3 w-12 h-12', isSameSender && 'invisible')}>
           <AvatarImage src={sender?.picture} />
           <AvatarFallback>{sender?.name?.at(0)?.toUpperCase()}</AvatarFallback>
         </Avatar>
       )}
 
-      <div className="col-start-2 self-center rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors">
-        {message.content}
+      <div
+        className={cn(
+          'col-start-2 self-center relative rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors',
+          !isCurrentUser && 'bg-theme dark:bg-theme'
+        )}
+      >
+        <span
+          className={cn(
+            'text-black dark:text-gray-100',
+            !isCurrentUser && '!text-white'
+          )}
+        >
+          {message.content}
+        </span>
+
+        {isCurrentUser && (
+          <DoubleTickIcon
+            className={cn(
+              'absolute bottom-1 right-1 transition-colors',
+              [MsgStatus.READ, MsgStatus.EDITED].includes(message.status) &&
+                'text-theme'
+            )}
+          />
+        )}
       </div>
 
       <div

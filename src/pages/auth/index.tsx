@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignInWithGoogle } from 'react-firebase-hooks/auth'
 import { getAdditionalUserInfo, onAuthStateChanged } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase'
+import { ref, set } from 'firebase/database'
+import { auth, database } from '@/firebase'
 import { Button } from '@/components/ui/button'
 import { Role } from '@/enums'
 import { SpinnerIcon } from '@/assets/icons'
+import { User } from '@/types'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -26,14 +27,18 @@ export default function Auth() {
       throw new Error('uid is not defined')
     }
 
+    const newUser: User = {
+      uid: userCredential?.user.uid,
+      name: user?.profile?.name as string,
+      email: user?.profile?.email as string,
+      picture: user?.profile?.picture as string,
+      role: Role.User,
+      online: true,
+      lastOnline: +new Date(),
+    }
+
     if (user?.isNewUser) {
-      await setDoc(doc(db, 'users', userCredential?.user.uid), {
-        uid: userCredential?.user.uid,
-        name: user?.profile?.name,
-        email: user?.profile?.email,
-        picture: user?.profile?.picture,
-        role: Role.User,
-      })
+      await set(ref(database, `users/${userCredential.user.uid}`), newUser)
     }
 
     setLoading(false)

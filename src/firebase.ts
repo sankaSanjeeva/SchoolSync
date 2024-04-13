@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { GoogleAuthProvider, getAuth } from 'firebase/auth'
+import { getDatabase } from 'firebase/database'
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -10,6 +11,7 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_APP_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_APP_APP_ID,
   measurementId: import.meta.env.VITE_APP_MEASUREMENT_ID,
+  databaseURL: import.meta.env.VITE_APP_DATABASE_URL,
 }
 
 const app = initializeApp(firebaseConfig)
@@ -20,3 +22,6 @@ export const auth = getAuth(app)
 
 // firestore
 export const db = getFirestore(app)
+
+// database
+export const database = getDatabase(app)

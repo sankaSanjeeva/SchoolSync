@@ -3,8 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
 import { Chat } from '@/types'
-
-const active = true
+import { useUser } from '@/hooks/user'
 
 interface Props {
   chat?: Partial<Chat>
@@ -13,11 +12,21 @@ interface Props {
 }
 
 export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
-  const user = chat?.members?.filter((x) => x.uid !== auth.currentUser?.uid)[0]
+  const { users } = useUser()
 
-  const currentUser = useMemo(
-    () => chat?.members?.find((member) => member.uid === auth.currentUser?.uid),
-    [chat?.members]
+  const conversant = useMemo(() => {
+    const conversantId = chat?.participants?.find(
+      (participant) => participant !== auth.currentUser?.uid
+    )
+    return users.find((user) => user.uid === conversantId)
+  }, [chat?.participants, users])
+
+  const unreadCount = useMemo(
+    () =>
+      chat?.participantsMeta?.find(
+        (participant) => participant.uid === auth.currentUser?.uid
+      )?.unreadCount,
+    [chat?.participantsMeta]
   )
 
   return (
@@ -32,19 +41,21 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
     >
       <div className="w-full grid grid-cols-[auto_1fr_auto_auto] grid-rows-2 gap-x-2 [&>*]:self-center">
         <div className="row-span-2">
-          <Avatar active={active}>
-            <AvatarImage src={user?.picture} />
-            <AvatarFallback>{user?.name?.at(0)?.toUpperCase()}</AvatarFallback>
+          <Avatar active={conversant?.online}>
+            <AvatarImage src={conversant?.picture} />
+            <AvatarFallback>
+              {conversant?.name?.at(0)?.toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </div>
 
         <span className="text-ellipsis overflow-hidden text-nowrap font-bold">
-          {user?.name}
+          {conversant?.name}
         </span>
 
-        {currentUser?.unreadCount ? (
-          <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-green-500">
-            {currentUser?.unreadCount > 99 ? '99+' : currentUser?.unreadCount}
+        {unreadCount ? (
+          <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-theme">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : (
           <span />
@@ -57,9 +68,7 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
         <span
           className={cn(
             'col-span-3 text-ellipsis overflow-hidden text-nowrap text-sm font-medium',
-            currentUser?.unreadCount
-              ? 'text-black dark:text-white'
-              : 'text-gray-400'
+            unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
           )}
         >
           {chat?.lastMessage?.content}
