@@ -32,8 +32,6 @@ interface Props {
 export default function SidePanel({ selectedChat, onSelectChat }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(true)
 
-  const [searchParams, setSearchParams] = useSearchParams()
-
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const [chats, loading] = useCollectionData(
@@ -44,35 +42,6 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
     )
   )
 
-  const search = searchParams.get('search') ?? ''
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target
-
-    setSearchParams((params) => {
-      if (value) {
-        params.set('search', value)
-      } else {
-        params.delete('search')
-      }
-      return params
-    })
-  }
-
-  const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
-    onSelectChat?.(chat)
-    setSearchParams((params) => {
-      params.delete('search')
-      return params
-    })
-    setDrawerOpen(false)
-  }
-
-  const handleSelectChat = (chat?: Partial<Chat>) => {
-    onSelectChat?.(chat)
-    setDrawerOpen(false)
-  }
-
   useEffect(() => {
     const chat = chats?.find(({ id }) => id === selectedChat?.id)
     if (chat) {
@@ -82,6 +51,37 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
   }, [chats])
 
   const Component = memo(function Component() {
+    const [searchParams, setSearchParams] = useSearchParams()
+
+    const search = searchParams.get('search') ?? ''
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = e.target
+
+      setSearchParams((params) => {
+        if (value) {
+          params.set('search', value)
+        } else {
+          params.delete('search')
+        }
+        return params
+      })
+    }
+
+    const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
+      onSelectChat?.(chat)
+      setSearchParams((params) => {
+        params.delete('search')
+        return params
+      })
+      setDrawerOpen(false)
+    }
+
+    const handleSelectChat = (chat?: Partial<Chat>) => {
+      onSelectChat?.(chat)
+      setDrawerOpen(false)
+    }
+
     return (
       <aside
         className={cn('flex-shrink-0', isDesktop ? 'w-[300px]' : 'w-full')}
