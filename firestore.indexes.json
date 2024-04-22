@@ -1,4 +1,33 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "chats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "participants",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "lastMessage.timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
