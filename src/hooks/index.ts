@@ -1,2 +1,2 @@
-// eslint-disable-next-line import/prefer-default-export
 export { default as useElementIsVisible } from './element-on-screen'
+export { default as useMediaQuery } from './media-query'
