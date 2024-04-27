@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, orderBy, query, where } from 'firebase/firestore'
@@ -24,12 +24,116 @@ import {
 } from '@/components/ui/drawer'
 import { cn } from '@/lib/utils'
 
-interface Props {
+interface ContentProps {
+  loading: boolean
+  isDesktop: boolean
+  chats: Chat[] | undefined
+  selectedChat: Partial<Chat> | undefined
+  onSelectChat: (chat?: Partial<Chat>) => void
+}
+
+function Content({
+  loading,
+  isDesktop,
+  chats,
+  selectedChat,
+  onSelectChat,
+}: ContentProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const search = searchParams.get('search') ?? ''
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target
+
+    setSearchParams((params) => {
+      if (value) {
+        params.set('search', value)
+      } else {
+        params.delete('search')
+      }
+      return params
+    })
+  }
+
+  const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
+    onSelectChat?.(chat)
+    setSearchParams((params) => {
+      params.delete('search')
+      return params
+    })
+  }
+
+  return (
+    <aside className={cn('flex-shrink-0', isDesktop ? 'w-[300px]' : 'w-full')}>
+      <TopIcons />
+
+      <div className="px-5">
+        <Input
+          placeholder="Search or start new chat"
+          variant="search"
+          className="pl-8"
+          startAdornment={<SearchIcon className="text-gray-400" />}
+          value={search}
+          onChange={handleSearch}
+        />
+      </div>
+
+      <div className="mt-3">
+        {search ? (
+          <SearchResult
+            chats={chats}
+            search={search}
+            onSelectChat={handleSelectSearchedChat}
+          />
+        ) : (
+          <Tabs
+            defaultValue={Tab.ALL}
+            // onValueChange={(e) => console.log(e)}
+          >
+            <TabsList>
+              <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
+              <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
+              <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
+            </TabsList>
+            <TabsContent value={Tab.ALL}>
+              {loading ? (
+                <div className="h-[calc(100vh_-_176px)] overflow-hidden">
+                  {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
+                    <ChatItemSkeleton key={x} />
+                  ))}
+                </div>
+              ) : (
+                <ScrollArea className="h-[calc(100vh_-_176px)]">
+                  {chats?.map((chat) => (
+                    <ChatItem
+                      key={chat.id}
+                      chat={chat}
+                      selectedChat={selectedChat}
+                      onSelectChat={onSelectChat}
+                    />
+                  ))}
+                </ScrollArea>
+              )}
+            </TabsContent>
+            <TabsContent value={Tab.PRIVATE}>private</TabsContent>
+            <TabsContent value={Tab.GROUP}>group</TabsContent>
+          </Tabs>
+        )}
+      </div>
+    </aside>
+  )
+}
+
+interface SidePanelProps {
   selectedChat?: Partial<Chat>
   onSelectChat?: (chat?: Partial<Chat>) => void
 }
 
-export default function SidePanel({ selectedChat, onSelectChat }: Props) {
+export default function SidePanel({
+  selectedChat,
+  onSelectChat,
+}: SidePanelProps) {
   const [drawerOpen, setDrawerOpen] = useState(true)
 
   const isDesktop = useMediaQuery('(min-width: 768px)')
@@ -50,103 +154,18 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats])
 
-  const Component = memo(function Component() {
-    const [searchParams, setSearchParams] = useSearchParams()
-
-    const search = searchParams.get('search') ?? ''
-
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { value } = e.target
-
-      setSearchParams((params) => {
-        if (value) {
-          params.set('search', value)
-        } else {
-          params.delete('search')
-        }
-        return params
-      })
-    }
-
-    const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
-      onSelectChat?.(chat)
-      setSearchParams((params) => {
-        params.delete('search')
-        return params
-      })
-      setDrawerOpen(false)
-    }
-
-    const handleSelectChat = (chat?: Partial<Chat>) => {
-      onSelectChat?.(chat)
-      setDrawerOpen(false)
-    }
-
-    return (
-      <aside
-        className={cn('flex-shrink-0', isDesktop ? 'w-[300px]' : 'w-full')}
-      >
-        <TopIcons />
-
-        <div className="px-5">
-          <Input
-            placeholder="Search or start new chat"
-            variant="search"
-            className="pl-8"
-            startAdornment={<SearchIcon className="text-gray-400" />}
-            value={search}
-            onChange={handleSearch}
-          />
-        </div>
-
-        <div className="mt-3">
-          {search ? (
-            <SearchResult
-              chats={chats}
-              search={search}
-              onSelectChat={handleSelectSearchedChat}
-            />
-          ) : (
-            <Tabs
-              defaultValue={Tab.ALL}
-              // onValueChange={(e) => console.log(e)}
-            >
-              <TabsList>
-                <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
-                <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
-                <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
-              </TabsList>
-              <TabsContent value={Tab.ALL}>
-                {loading ? (
-                  <div className="h-[calc(100vh_-_176px)] overflow-hidden">
-                    {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
-                      <ChatItemSkeleton key={x} />
-                    ))}
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[calc(100vh_-_176px)]">
-                    {chats?.map((chat) => (
-                      <ChatItem
-                        key={chat.id}
-                        chat={chat}
-                        selectedChat={selectedChat}
-                        onSelectChat={handleSelectChat}
-                      />
-                    ))}
-                  </ScrollArea>
-                )}
-              </TabsContent>
-              <TabsContent value={Tab.PRIVATE}>private</TabsContent>
-              <TabsContent value={Tab.GROUP}>group</TabsContent>
-            </Tabs>
-          )}
-        </div>
-      </aside>
-    )
-  })
+  const handleSelectChat = (chat: Partial<Chat> | undefined) => {
+    onSelectChat?.(chat)
+    setDrawerOpen(false)
+  }
 
   if (isDesktop) {
-    return <Component />
+    return (
+      <Content
+        onSelectChat={handleSelectChat}
+        {...{ isDesktop, loading, chats, selectedChat }}
+      />
+    )
   }
 
   return (
@@ -155,7 +174,10 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
         <ThinArrowIcon className="text-white dark:text-black" />
       </DrawerTrigger>
       <DrawerContent className="h-full">
-        <Component />
+        <Content
+          onSelectChat={handleSelectChat}
+          {...{ isDesktop, loading, chats, selectedChat }}
+        />
         <DrawerClose className="fixed w-10 h-10 rounded-full top-1/2 right-1 -translate-y-1/2 z-10 flex justify-center items-center bg-gray-500/50 shadow-[0_0_20px_5px_#72727287]">
           <ThinArrowIcon className="rotate-180 text-white dark:text-black" />
         </DrawerClose>
