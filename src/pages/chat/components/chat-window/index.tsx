@@ -147,7 +147,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
 
           {/* <ScrollArea className="h-full"> */}
 
-          <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto">
+          <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto pt-2">
             {loading &&
               [1, 2, 3].map((x) => (
                 <ChatBubbleSkeleton

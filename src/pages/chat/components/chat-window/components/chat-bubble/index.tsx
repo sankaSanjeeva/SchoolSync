@@ -107,7 +107,7 @@ export default function ChatBubble({
           className={cn(
             '[&_blockquote]:blockquote',
             'text-black dark:text-gray-100',
-            !isCurrentUser && '!text-white'
+            !isCurrentUser && '!text-white [&_blockquote]:!bg-[#31bb00]'
           )}
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: message.content }}
@@ -116,7 +116,7 @@ export default function ChatBubble({
         {isCurrentUser && (
           <DoubleTickIcon
             className={cn(
-              'absolute bottom-1 right-1 transition-colors',
+              'absolute bottom-0.5 right-1 transition-colors',
               [MsgStatus.READ, MsgStatus.EDITED].includes(message.status) &&
                 'text-theme'
             )}
