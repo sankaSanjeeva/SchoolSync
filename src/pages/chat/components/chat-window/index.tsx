@@ -6,7 +6,6 @@ import {
   query,
   setDoc,
   updateDoc,
-  where,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { formatDistance } from 'date-fns'
@@ -35,7 +34,6 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     collection(db, `chats/${chat?.id}/messages`).withConverter(
       messageConverter
     ),
-    where('status', 'in', [MsgStatus.EDITED, MsgStatus.READ, MsgStatus.SENT]),
     orderBy('timestamp', 'desc')
   )
 
@@ -55,6 +53,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
         id,
         senderID,
         content: newMessage,
+        type: 'text',
         timestamp: +new Date(),
         status: MsgStatus.SENT,
       }

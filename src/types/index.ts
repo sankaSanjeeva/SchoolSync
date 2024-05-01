@@ -48,8 +48,10 @@ export type Message = {
   id: string
   senderID: User['uid']
   content: string
+  type: 'text' | 'photo' | 'video' | 'document'
   timestamp: number
   status: MsgStatus
+  deletedFor?: Chat['participants']
 }
 
 export const messageConverter: FirestoreDataConverter<Message> = {

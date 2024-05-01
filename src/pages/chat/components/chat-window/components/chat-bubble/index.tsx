@@ -6,8 +6,8 @@ import { Chat, Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
-import { DoubleTickIcon } from '@/assets/icons'
 import { useUser } from '@/hooks/user'
+import { MessageContent } from './components'
 
 interface Props
   extends Partial<Pick<Chat, 'id' | 'type' | 'participantsMeta'>> {
@@ -97,32 +97,11 @@ export default function ChatBubble({
         </Avatar>
       )}
 
-      <div
-        className={cn(
-          'col-start-2 self-center relative rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors',
-          !isCurrentUser && 'bg-theme dark:bg-theme'
-        )}
-      >
-        <div
-          className={cn(
-            '[&_blockquote]:blockquote',
-            'text-black dark:text-gray-100',
-            !isCurrentUser && '!text-white [&_blockquote]:!bg-[#31bb00]'
-          )}
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: message.content }}
-        />
-
-        {isCurrentUser && (
-          <DoubleTickIcon
-            className={cn(
-              'absolute bottom-0.5 right-1 transition-colors',
-              [MsgStatus.READ, MsgStatus.EDITED].includes(message.status) &&
-                'text-theme'
-            )}
-          />
-        )}
-      </div>
+      <MessageContent
+        chatId={chatId!}
+        isCurrentUser={isCurrentUser}
+        {...message}
+      />
 
       <div
         className={cn(
