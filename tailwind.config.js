@@ -19,6 +19,7 @@ module.exports = {
         300: '#E8ECEF',
         400: '#A9A9A9',
         500: '#727272',
+        800: '#242424',
         900: '#131313',
       },
       theme: '#36CE00',
@@ -47,5 +48,15 @@ module.exports = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    ({ addUtilities }) => {
+      addUtilities({
+        '.blockquote': {
+          '@apply py-1 px-4 my-1 !bg-gray-200 dark:!bg-gray-800 rounded !border-l-4 !border-l-gray-400 dark:!border-l-gray-500':
+            {},
+        },
+      })
+    },
+  ],
 }

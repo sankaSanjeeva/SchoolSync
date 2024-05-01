@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
@@ -13,6 +13,8 @@ interface Props {
 
 export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
   const { users } = useUser()
+
+  const fakeElement = useRef<HTMLDivElement>(null)
 
   const conversant = useMemo(() => {
     const conversantId = chat?.participants?.find(
@@ -71,9 +73,16 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
             unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
           )}
         >
-          {chat?.lastMessage?.content}
+          {fakeElement.current?.textContent}
         </span>
       </div>
+
+      <div
+        ref={fakeElement}
+        className="hidden"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: chat?.lastMessage?.content ?? '' }}
+      />
     </button>
   )
 }

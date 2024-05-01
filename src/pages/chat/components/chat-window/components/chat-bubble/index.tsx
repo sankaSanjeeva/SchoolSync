@@ -103,14 +103,15 @@ export default function ChatBubble({
           !isCurrentUser && 'bg-theme dark:bg-theme'
         )}
       >
-        <span
+        <div
           className={cn(
+            '[&_blockquote]:blockquote',
             'text-black dark:text-gray-100',
             !isCurrentUser && '!text-white'
           )}
-        >
-          {message.content}
-        </span>
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: message.content }}
+        />
 
         {isCurrentUser && (
           <DoubleTickIcon
