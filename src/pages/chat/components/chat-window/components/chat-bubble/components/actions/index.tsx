@@ -87,10 +87,7 @@ export default function Actions({
               Are you sure you want to delete this message?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              The &quot;delete for me&quot; option will only remove the message
-              from your chat, while the &quot;delete for everyone&quot; option
-              will remove the message from both your chat and the
-              recipient&apos;s chat
+              {`The "Delete for me" option will only remove the message from your chat${showDeleteForEveryone && `, while the "Delete for everyone" option will remove the message from both your chat and the recipient's chat`}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
