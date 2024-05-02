@@ -13,6 +13,7 @@ interface Props
   extends Partial<Pick<Chat, 'id' | 'type' | 'participantsMeta'>> {
   message: Message
   prevMsgSender: Message['senderID'] | undefined
+  isLast: boolean
 }
 
 export default function ChatBubble({
@@ -21,6 +22,7 @@ export default function ChatBubble({
   id: chatId,
   type,
   participantsMeta,
+  isLast,
 }: Props) {
   const { ref, visible } = useElementIsVisible()
   const { users } = useUser()
@@ -100,6 +102,7 @@ export default function ChatBubble({
       <MessageContent
         chatId={chatId!}
         isCurrentUser={isCurrentUser}
+        isLast={isLast}
         {...message}
       />
 

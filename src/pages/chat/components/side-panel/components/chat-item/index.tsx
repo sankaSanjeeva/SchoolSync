@@ -77,7 +77,7 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
             unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
           )}
         >
-          {lastMessage}
+          {lastMessage || <em className="opacity-75">message was deleted</em>}
         </span>
       </div>
     </button>

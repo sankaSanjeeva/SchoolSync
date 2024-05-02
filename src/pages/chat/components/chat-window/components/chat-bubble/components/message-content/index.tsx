@@ -8,6 +8,7 @@ import { auth } from '@/firebase'
 interface Props extends Message {
   chatId: Chat['id']
   isCurrentUser: boolean
+  isLast: boolean
 }
 
 function DeleteBanner({ text }: { text: string }) {

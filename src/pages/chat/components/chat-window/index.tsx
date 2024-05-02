@@ -163,6 +163,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
                 participantsMeta={chat.participantsMeta}
                 type={chat.type}
                 id={chat.id}
+                isLast={i === 0}
               />
             ))}
           </div>

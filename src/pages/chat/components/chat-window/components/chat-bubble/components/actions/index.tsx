@@ -30,7 +30,8 @@ export default function Actions({
   senderID,
   timestamp,
   deletedFor = [],
-}: Message & { chatId: Chat['id'] }) {
+  isLast,
+}: Message & { chatId: Chat['id']; isLast: boolean }) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 
   // const showEdit = useMemo(
@@ -47,16 +48,29 @@ export default function Actions({
     [senderID, timestamp]
   )
 
+  const updateLastMessage = () => {
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chatId}`), {
+        lastMessage: {
+          content: '',
+          timestamp,
+        },
+      })
+    }
+  }
+
   const deleteMessageForMe = () => {
     updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
       deletedFor: [...deletedFor, auth.currentUser?.uid],
     })
+    updateLastMessage()
   }
 
   const deleteMessageForEveryone = () => {
     updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
       status: MsgStatus.DELETED,
     })
+    updateLastMessage()
   }
 
   return (
