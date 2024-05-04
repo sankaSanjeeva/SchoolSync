@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useCallback, useMemo, useState } from 'react'
 import {
   collection,
   doc,
@@ -8,7 +8,7 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { formatDistance } from 'date-fns'
+import { format, formatDistance, isToday, isValid, isYesterday } from 'date-fns'
 import { auth, db } from '@/firebase'
 import { Chat, Message, chatConverter, messageConverter } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -30,11 +30,15 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
 
   const { users } = useUser()
 
-  const q = query(
-    collection(db, `chats/${chat?.id}/messages`).withConverter(
-      messageConverter
-    ),
-    orderBy('timestamp', 'desc')
+  const q = useMemo(
+    () =>
+      query(
+        collection(db, `chats/${chat?.id}/messages`).withConverter(
+          messageConverter
+        ),
+        orderBy('timestamp', 'desc')
+      ),
+    [chat?.id]
   )
 
   const [messages, loading] = useCollectionData(q)
@@ -114,6 +118,25 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     }
   }
 
+  const showDateBanner = useCallback(
+    (currentDate: Message['timestamp'], previousDate: Message['timestamp']) =>
+      new Date(currentDate).getDate() !== new Date(previousDate).getDate(),
+    []
+  )
+
+  const dateBannerText = useCallback((date: Message['timestamp']) => {
+    if (!isValid(date)) {
+      return null
+    }
+    if (isToday(date)) {
+      return 'Today'
+    }
+    if (isYesterday(date)) {
+      return 'Yesterday'
+    }
+    return format(new Date(date), 'MMMM do, yyyy')
+  }, [])
+
   return (
     <main className="flex flex-grow bg-gray-100 dark:bg-black transition-colors">
       {chat ? (
@@ -156,15 +179,28 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
                 />
               ))}
             {messages?.map((message, i) => (
-              <ChatBubble
-                key={message.id}
-                message={message}
-                prevMsgSender={messages[i + 1]?.senderID}
-                participantsMeta={chat.participantsMeta}
-                type={chat.type}
-                id={chat.id}
-                isLast={i === 0}
-              />
+              <Fragment key={message.id}>
+                <ChatBubble
+                  message={message}
+                  prevMsgSender={messages[i + 1]?.senderID}
+                  participantsMeta={chat.participantsMeta}
+                  type={chat.type}
+                  id={chat.id}
+                  isLast={i === 0}
+                />
+                {showDateBanner(
+                  message.timestamp,
+                  messages[i + 1]?.timestamp
+                ) && (
+                  <div className="flex justify-center pointer-events-none">
+                    <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
+                      <em className="opacity-50">
+                        - {dateBannerText(message.timestamp)} -
+                      </em>
+                    </div>
+                  </div>
+                )}
+              </Fragment>
             ))}
           </div>
 
