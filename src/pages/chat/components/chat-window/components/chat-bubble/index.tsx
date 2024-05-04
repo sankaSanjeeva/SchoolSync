@@ -42,7 +42,7 @@ export default function ChatBubble({
     [message.senderID, prevMsgSender]
   )
 
-  const shouldPassRef = useMemo(
+  const isUnreadMessage = useMemo(
     () => !isCurrentUser && message.status === MsgStatus.SENT,
     [isCurrentUser, message.status]
   )
@@ -84,7 +84,6 @@ export default function ChatBubble({
         'grid grid-cols-[auto_minmax(100px,_1fr)] grid-rows-[auto_minmax(auto,_1fr)_auto] w-fit max-w-[calc(100%_-_100px)] px-3',
         isCurrentUser && 'mr-0 ml-auto'
       )}
-      {...(shouldPassRef && { ref })}
     >
       {showConversantInfo && !isSameSender && (
         <div className="col-start-2 mb-1 px-3 font-medium text-xs text-gray-500">
@@ -103,8 +102,11 @@ export default function ChatBubble({
         chatId={chatId!}
         isCurrentUser={isCurrentUser}
         isLast={isLast}
+        className="col-start-2 self-center"
         {...message}
       />
+
+      {isUnreadMessage && <div ref={ref} />}
 
       <div
         className={cn(

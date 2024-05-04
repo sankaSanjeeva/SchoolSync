@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button'
 import { MoreIcon } from '@/assets/icons'
 import { ChatType, MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
-import { ChatBubble, Editor } from './components'
+import { ChatBubble, Editor, NewMessageIndicator } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
 import { useUser } from '@/hooks/user'
 
@@ -149,6 +149,13 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     return format(new Date(date), 'MMMM do, yyyy')
   }, [])
 
+  const unreadCount = useMemo(
+    () =>
+      chat?.participantsMeta?.find(({ uid }) => uid === auth.currentUser?.uid)
+        ?.unreadCount ?? 0,
+    [chat?.participantsMeta]
+  )
+
   useEffect(() => {
     if (!loading) {
       dummyElement.current?.scrollIntoView({ behavior: 'instant' })
@@ -226,6 +233,15 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
               ))}
             </div>
           </ScrollArea>
+
+          {unreadCount > 0 && (
+            <NewMessageIndicator
+              messageCount={unreadCount}
+              onClick={() => {
+                dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+              }}
+            />
+          )}
 
           <Editor
             value={newMessage}

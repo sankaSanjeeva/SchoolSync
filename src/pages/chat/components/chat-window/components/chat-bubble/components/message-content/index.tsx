@@ -9,6 +9,7 @@ interface Props extends Message {
   chatId: Chat['id']
   isCurrentUser: boolean
   isLast: boolean
+  className?: string
 }
 
 function DeleteBanner({ text }: { text: string }) {
@@ -19,7 +20,7 @@ function DeleteBanner({ text }: { text: string }) {
   )
 }
 export default function MessageContent(props: Props) {
-  const { content, status, deletedFor, isCurrentUser } = props
+  const { className, content, status, deletedFor, isCurrentUser } = props
 
   if (
     (status === MsgStatus.DELETED && isCurrentUser) ||
@@ -35,7 +36,8 @@ export default function MessageContent(props: Props) {
   return (
     <div
       className={cn(
-        'col-start-2 self-center relative rounded-lg p-3 [&:hover>#action-trigger]:opacity-100 bg-gray-300 dark:bg-gray-900 transition-colors',
+        className,
+        'relative rounded-lg p-3 [&:hover>#action-trigger]:opacity-100 bg-gray-300 dark:bg-gray-900 transition-colors',
         !isCurrentUser && 'bg-[#005c4b] dark:bg-[#005c4b]'
       )}
     >
