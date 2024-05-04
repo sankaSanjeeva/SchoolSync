@@ -234,7 +234,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
             </div>
           </ScrollArea>
 
-          {unreadCount > 0 && (
+          {unreadCount > 0 && !loading && (
             <NewMessageIndicator
               messageCount={unreadCount}
               onClick={() => {

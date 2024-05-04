@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes } from 'react'
+import { ButtonHTMLAttributes, useEffect, useState } from 'react'
 import { ChevronIcon } from '@/assets/icons'
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -6,6 +6,23 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export default function NewMessageIndicator({ messageCount, ...rest }: Props) {
+  const [render, setRender] = useState(false)
+
+  /**
+   * Since the initial value of "loading" was false in the parent component, this component was displayed unnecessarily. A delay was added to fix it.
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setRender(true)
+    }, 1000)
+
+    return () => clearTimeout(timeout)
+  }, [])
+
+  if (!render) {
+    return null
+  }
+
   return (
     <div className="relative">
       <button
