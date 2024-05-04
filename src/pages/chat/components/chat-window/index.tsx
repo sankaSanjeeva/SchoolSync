@@ -1,4 +1,11 @@
-import { Fragment, useCallback, useMemo, useState } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   collection,
   doc,
@@ -12,8 +19,9 @@ import { format, formatDistance, isToday, isValid, isYesterday } from 'date-fns'
 import { auth, db } from '@/firebase'
 import { Chat, Message, chatConverter, messageConverter } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MoreIcon } from '@/assets/icons'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
+import { MoreIcon } from '@/assets/icons'
 import { ChatType, MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
 import { ChatBubble, Editor } from './components'
@@ -27,6 +35,8 @@ interface Props {
 
 export default function ChatWindow({ chat, onCreateChat }: Props) {
   const [newMessage, setNewMessage] = useState('')
+
+  const dummyElement = useRef<HTMLDivElement>(null)
 
   const { users } = useUser()
 
@@ -61,7 +71,9 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
         timestamp: +new Date(),
         status: MsgStatus.SENT,
       }
-    )
+    ).then(() => {
+      dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+    })
   }
 
   const handleClickSend = async () => {
@@ -137,6 +149,12 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     return format(new Date(date), 'MMMM do, yyyy')
   }, [])
 
+  useEffect(() => {
+    if (!loading) {
+      dummyElement.current?.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [loading])
+
   return (
     <main className="flex flex-grow bg-gray-100 dark:bg-black transition-colors">
       {chat ? (
@@ -167,44 +185,47 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
             </span>
           </header>
 
-          {/* <ScrollArea className="h-full"> */}
+          <div className="flex-grow" />
 
-          <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto pt-2">
-            {loading &&
-              [1, 2, 3].map((x) => (
-                <ChatBubbleSkeleton
-                  type={chat.type}
-                  key={x}
-                  isCurrentUser={Math.random() < 0.5}
-                />
-              ))}
-            {messages?.map((message, i) => (
-              <Fragment key={message.id}>
-                <ChatBubble
-                  message={message}
-                  prevMsgSender={messages[i + 1]?.senderID}
-                  participantsMeta={chat.participantsMeta}
-                  type={chat.type}
-                  id={chat.id}
-                  isLast={i === 0}
-                />
-                {showDateBanner(
-                  message.timestamp,
-                  messages[i + 1]?.timestamp
-                ) && (
-                  <div className="flex justify-center pointer-events-none">
-                    <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
-                      <em className="opacity-50">
-                        - {dateBannerText(message.timestamp)} -
-                      </em>
+          <ScrollArea>
+            <div className="flex flex-col-reverse gap-3 pt-2">
+              <div ref={dummyElement} />
+
+              {loading &&
+                [1, 2, 3].map((x) => (
+                  <ChatBubbleSkeleton
+                    type={chat.type}
+                    key={x}
+                    isCurrentUser={Math.random() < 0.5}
+                  />
+                ))}
+
+              {messages?.map((message, i) => (
+                <Fragment key={message.id}>
+                  <ChatBubble
+                    message={message}
+                    prevMsgSender={messages[i + 1]?.senderID}
+                    participantsMeta={chat.participantsMeta}
+                    type={chat.type}
+                    id={chat.id}
+                    isLast={i === 0}
+                  />
+                  {showDateBanner(
+                    message.timestamp,
+                    messages[i + 1]?.timestamp
+                  ) && (
+                    <div className="flex justify-center pointer-events-none">
+                      <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
+                        <em className="opacity-50">
+                          - {dateBannerText(message.timestamp)} -
+                        </em>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </Fragment>
-            ))}
-          </div>
-
-          {/* </ScrollArea> */}
+                  )}
+                </Fragment>
+              ))}
+            </div>
+          </ScrollArea>
 
           <Editor
             value={newMessage}
