@@ -36,7 +36,7 @@ export default function MessageContent(props: Props) {
     <div
       className={cn(
         'col-start-2 self-center relative rounded-lg p-3 [&:hover>#action-trigger]:opacity-100 bg-gray-300 dark:bg-gray-900 transition-colors',
-        !isCurrentUser && 'bg-theme dark:bg-theme'
+        !isCurrentUser && 'bg-[#005c4b] dark:bg-[#005c4b]'
       )}
     >
       <Actions {...props} />
@@ -44,8 +44,8 @@ export default function MessageContent(props: Props) {
       <div
         className={cn(
           '[&_blockquote]:blockquote',
-          'text-black dark:text-gray-100',
-          !isCurrentUser && '!text-white [&_blockquote]:!bg-[#31bb00]'
+          '[&>*]:word-break text-black dark:text-gray-100',
+          !isCurrentUser && '!text-white [&_blockquote]:!bg-[#005040]'
         )}
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: content }}

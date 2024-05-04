@@ -20,7 +20,7 @@ export default function Editor({ onSend, ...rest }: Props) {
             ['clean'],
           ],
         }}
-        className="rounded-3xl shadow-lg bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote"
+        className="rounded-3xl shadow-lg bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote"
         placeholder="Type here"
         theme="snow"
         {...rest}
