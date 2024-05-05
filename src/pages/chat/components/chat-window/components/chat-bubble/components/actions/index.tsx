@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronIcon } from '@/assets/icons'
 import { Chat, Message } from '@/types'
 import { auth, db } from '@/firebase'
-import { MSG_DELETE_FOR_ME_TIMEOUT } from '@/constants'
+import { MSG_DELETE_FOR_ME_TIMEOUT, MSG_EDIT_TIMEOUT } from '@/constants'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,23 +23,34 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { MsgStatus } from '@/enums'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import Editor from '../../../editor'
+
+interface Props extends Message {
+  chatId: Chat['id']
+  isLast: boolean
+}
 
 export default function Actions({
   chatId,
   id,
+  content,
   senderID,
   timestamp,
+  status,
   deletedFor = [],
   isLast,
-}: Message & { chatId: Chat['id']; isLast: boolean }) {
+}: Props) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [newMessage, setNewMessage] = useState(content)
 
-  // const showEdit = useMemo(
-  //   () =>
-  //     auth.currentUser?.uid === senderID &&
-  //     differenceInMinutes(+new Date(), timestamp) < MSG_EDIT_TIMEOUT,
-  //   [senderID, timestamp]
-  // )
+  const showEdit = useMemo(
+    () =>
+      auth.currentUser?.uid === senderID &&
+      differenceInMinutes(+new Date(), timestamp) < MSG_EDIT_TIMEOUT,
+    [senderID, timestamp]
+  )
 
   const showDeleteForEveryone = useMemo(
     () =>
@@ -48,11 +59,16 @@ export default function Actions({
     [senderID, timestamp]
   )
 
-  const updateLastMessage = () => {
+  const updateLastMessage = (
+    newStatus: Message['status'],
+    newDeletedFor = deletedFor
+  ) => {
     if (isLast) {
       updateDoc(doc(db, `chats/${chatId}`), {
         lastMessage: {
-          content: '',
+          content: newMessage,
+          status: newStatus,
+          deletedFor: newDeletedFor,
           timestamp,
         },
       })
@@ -60,17 +76,28 @@ export default function Actions({
   }
 
   const deleteMessageForMe = () => {
+    const newDeletedFor = [...deletedFor, auth.currentUser?.uid ?? '']
+
     updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
-      deletedFor: [...deletedFor, auth.currentUser?.uid],
+      deletedFor: newDeletedFor,
     })
-    updateLastMessage()
+    updateLastMessage(status, newDeletedFor)
   }
 
   const deleteMessageForEveryone = () => {
     updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
       status: MsgStatus.DELETED,
     })
-    updateLastMessage()
+    updateLastMessage(MsgStatus.DELETED)
+  }
+
+  const editMessage = () => {
+    updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
+      content: newMessage,
+      status: MsgStatus.EDITED,
+    })
+    updateLastMessage(MsgStatus.EDITED)
+    setShowEditDialog(false)
   }
 
   return (
@@ -87,12 +114,27 @@ export default function Actions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          {/* {showEdit && <DropdownMenuItem>Edit</DropdownMenuItem>} */}
+          {showEdit && (
+            <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+              Edit
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setShowDeleteAlert(true)}>
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogTitle>Edit message</DialogTitle>
+          <Editor
+            value={newMessage}
+            onChange={setNewMessage}
+            onSubmit={editMessage}
+          />
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>

@@ -246,7 +246,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           <Editor
             value={newMessage}
             onChange={setNewMessage}
-            onSend={handleClickSend}
+            onSubmit={handleClickSend}
           />
         </div>
       ) : (

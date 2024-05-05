@@ -1,4 +1,5 @@
 export { default as ChevronIcon } from './chevron.svg?react'
+export { default as CloseIcon } from './close.svg?react'
 export { default as DarkModeIcon } from './dark-mode.svg?react'
 export { default as DoubleTickIcon } from './double-tick.svg?react'
 export { default as LightModeIcon } from './light-mode.svg?react'

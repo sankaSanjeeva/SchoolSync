@@ -108,13 +108,9 @@ export default function ChatBubble({
 
       {isUnreadMessage && <div ref={ref} />}
 
-      <div
-        className={cn(
-          'col-start-2 mt-1 px-3 font-medium text-xs text-gray-500',
-          isCurrentUser && 'text-end'
-        )}
-      >
-        {formateTime(message.timestamp)}
+      <div className="col-start-2 flex justify-between gap-5 mt-1 px-3 font-medium text-xs text-gray-500">
+        <em>{message.status === MsgStatus.EDITED && 'Edited'}</em>
+        <span>{formateTime(message.timestamp)}</span>
       </div>
     </div>
   )

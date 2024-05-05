@@ -1,14 +1,19 @@
+import { useMemo } from 'react'
 import ReactQuill, { ReactQuillProps } from 'react-quill'
 import { PaperclipIcon, SendIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import 'react-quill/dist/quill.snow.css'
 
 interface Props extends ReactQuillProps {
-  onSend: () => void
+  onSubmit: () => void
 }
 
-export default function Editor({ onSend, ...rest }: Props) {
-  const textContent = document.querySelector('.ql-editor')?.textContent
+export default function Editor({ onSubmit, ...rest }: Props) {
+  const textContent = useMemo(() => {
+    const element = document.createElement('div')
+    element.innerHTML = `${rest.value ?? ''}`
+    return element.textContent
+  }, [rest.value])
 
   return (
     <div className="relative p-2 [&_.ql-toolbar]:border-none [&_.ql-container]:border-none [&_.ql-container]:text-base">
@@ -30,7 +35,7 @@ export default function Editor({ onSend, ...rest }: Props) {
           size="icon"
           variant="ghost"
           className="rounded-full absolute right-2 top-1/2 -translate-y-1/2"
-          onClick={onSend}
+          onClick={onSubmit}
         >
           <SendIcon className="text-gray-500" />
         </Button>

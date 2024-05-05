@@ -19,6 +19,7 @@ function DeleteBanner({ text }: { text: string }) {
     </div>
   )
 }
+
 export default function MessageContent(props: Props) {
   const { className, content, status, deletedFor, isCurrentUser } = props
 
