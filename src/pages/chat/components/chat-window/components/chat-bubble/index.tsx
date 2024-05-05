@@ -6,13 +6,14 @@ import { Chat, Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
-import { DoubleTickIcon } from '@/assets/icons'
 import { useUser } from '@/hooks/user'
+import { MessageContent } from './components'
 
 interface Props
   extends Partial<Pick<Chat, 'id' | 'type' | 'participantsMeta'>> {
   message: Message
   prevMsgSender: Message['senderID'] | undefined
+  isLast: boolean
 }
 
 export default function ChatBubble({
@@ -21,6 +22,7 @@ export default function ChatBubble({
   id: chatId,
   type,
   participantsMeta,
+  isLast,
 }: Props) {
   const { ref, visible } = useElementIsVisible()
   const { users } = useUser()
@@ -40,7 +42,7 @@ export default function ChatBubble({
     [message.senderID, prevMsgSender]
   )
 
-  const shouldPassRef = useMemo(
+  const isUnreadMessage = useMemo(
     () => !isCurrentUser && message.status === MsgStatus.SENT,
     [isCurrentUser, message.status]
   )
@@ -82,7 +84,6 @@ export default function ChatBubble({
         'grid grid-cols-[auto_minmax(100px,_1fr)] grid-rows-[auto_minmax(auto,_1fr)_auto] w-fit max-w-[calc(100%_-_100px)] px-3',
         isCurrentUser && 'mr-0 ml-auto'
       )}
-      {...(shouldPassRef && { ref })}
     >
       {showConversantInfo && !isSameSender && (
         <div className="col-start-2 mb-1 px-3 font-medium text-xs text-gray-500">
@@ -97,39 +98,19 @@ export default function ChatBubble({
         </Avatar>
       )}
 
-      <div
-        className={cn(
-          'col-start-2 self-center relative rounded-lg p-3 bg-gray-300 dark:bg-gray-900 transition-colors',
-          !isCurrentUser && 'bg-theme dark:bg-theme'
-        )}
-      >
-        <span
-          className={cn(
-            'text-black dark:text-gray-100',
-            !isCurrentUser && '!text-white'
-          )}
-        >
-          {message.content}
-        </span>
+      <MessageContent
+        chatId={chatId!}
+        isCurrentUser={isCurrentUser}
+        isLast={isLast}
+        className="col-start-2 self-center"
+        {...message}
+      />
 
-        {isCurrentUser && (
-          <DoubleTickIcon
-            className={cn(
-              'absolute bottom-1 right-1 transition-colors',
-              [MsgStatus.READ, MsgStatus.EDITED].includes(message.status) &&
-                'text-theme'
-            )}
-          />
-        )}
-      </div>
+      {isUnreadMessage && <div ref={ref} />}
 
-      <div
-        className={cn(
-          'col-start-2 mt-1 px-3 font-medium text-xs text-gray-500',
-          isCurrentUser && 'text-end'
-        )}
-      >
-        {formateTime(message.timestamp)}
+      <div className="col-start-2 flex justify-between gap-5 mt-1 px-3 font-medium text-xs text-gray-500">
+        <em>{message.edited && 'Edited'}</em>
+        <span>{formateTime(message.timestamp)}</span>
       </div>
     </div>
   )

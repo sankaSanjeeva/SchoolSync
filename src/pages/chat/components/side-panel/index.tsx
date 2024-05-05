@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { collection, orderBy, query, where } from 'firebase/firestore'
-import { SearchIcon } from '@/assets/icons'
+import { SearchIcon, ThinArrowIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -15,22 +15,31 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
 import { auth, db } from '@/firebase'
 import { Chat, chatConverter } from '@/types'
+import { useMediaQuery } from '@/hooks'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
+import { cn } from '@/lib/utils'
 
-interface Props {
-  selectedChat?: Partial<Chat>
-  onSelectChat?: (chat?: Partial<Chat>) => void
+interface ContentProps {
+  loading: boolean
+  isDesktop: boolean
+  chats: Chat[] | undefined
+  selectedChat: Partial<Chat> | undefined
+  onSelectChat: (chat?: Partial<Chat>) => void
 }
 
-export default function SidePanel({ selectedChat, onSelectChat }: Props) {
+function Content({
+  loading,
+  isDesktop,
+  chats,
+  selectedChat,
+  onSelectChat,
+}: ContentProps) {
   const [searchParams, setSearchParams] = useSearchParams()
-
-  const [chats, loading] = useCollectionData(
-    query(
-      collection(db, 'chats').withConverter(chatConverter),
-      where('participants', 'array-contains', auth.currentUser?.uid),
-      orderBy('lastMessage.timestamp', 'desc')
-    )
-  )
 
   const search = searchParams.get('search') ?? ''
 
@@ -55,16 +64,8 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
     })
   }
 
-  useEffect(() => {
-    const chat = chats?.find(({ id }) => id === selectedChat?.id)
-    if (chat) {
-      onSelectChat?.(chat)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chats])
-
   return (
-    <aside className="w-[300px] flex-shrink-0">
+    <aside className={cn('flex-shrink-0', isDesktop ? 'w-[300px]' : 'w-full')}>
       <TopIcons />
 
       <div className="px-5">
@@ -121,5 +122,66 @@ export default function SidePanel({ selectedChat, onSelectChat }: Props) {
         )}
       </div>
     </aside>
+  )
+}
+
+interface SidePanelProps {
+  selectedChat?: Partial<Chat>
+  onSelectChat?: (chat?: Partial<Chat>) => void
+}
+
+export default function SidePanel({
+  selectedChat,
+  onSelectChat,
+}: SidePanelProps) {
+  const [drawerOpen, setDrawerOpen] = useState(true)
+
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
+  const [chats, loading] = useCollectionData(
+    query(
+      collection(db, 'chats').withConverter(chatConverter),
+      where('participants', 'array-contains', auth.currentUser?.uid),
+      orderBy('lastMessage.timestamp', 'desc')
+    )
+  )
+
+  useEffect(() => {
+    const chat = chats?.find(({ id }) => id === selectedChat?.id)
+    if (chat) {
+      onSelectChat?.(chat)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats])
+
+  const handleSelectChat = (chat: Partial<Chat> | undefined) => {
+    onSelectChat?.(chat)
+    setDrawerOpen(false)
+  }
+
+  if (isDesktop) {
+    return (
+      <Content
+        onSelectChat={handleSelectChat}
+        {...{ isDesktop, loading, chats, selectedChat }}
+      />
+    )
+  }
+
+  return (
+    <Drawer open={drawerOpen} direction="left" onOpenChange={setDrawerOpen}>
+      <DrawerTrigger className="fixed w-10 h-10 rounded-full top-1/2 left-1 -translate-y-1/2 z-10 flex justify-center items-center bg-gray-500/50 shadow-[0_0_20px_5px_#72727287]">
+        <ThinArrowIcon className="text-white dark:text-black" />
+      </DrawerTrigger>
+      <DrawerContent className="h-full">
+        <Content
+          onSelectChat={handleSelectChat}
+          {...{ isDesktop, loading, chats, selectedChat }}
+        />
+        <DrawerClose className="fixed w-10 h-10 rounded-full top-1/2 right-1 -translate-y-1/2 z-10 flex justify-center items-center bg-gray-500/50 shadow-[0_0_20px_5px_#72727287]">
+          <ThinArrowIcon className="rotate-180 text-white dark:text-black" />
+        </DrawerClose>
+      </DrawerContent>
+    </Drawer>
   )
 }

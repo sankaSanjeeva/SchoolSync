@@ -1,4 +1,11 @@
-import { ChangeEvent, useMemo, useState } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   collection,
   doc,
@@ -6,19 +13,18 @@ import {
   query,
   setDoc,
   updateDoc,
-  where,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { formatDistance } from 'date-fns'
+import { format, formatDistance, isToday, isValid, isYesterday } from 'date-fns'
 import { auth, db } from '@/firebase'
 import { Chat, Message, chatConverter, messageConverter } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { MoreIcon, PaperclipIcon, SendIcon, SmileyIcon } from '@/assets/icons'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { MoreIcon } from '@/assets/icons'
 import { ChatType, MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
-import { ChatBubble } from './components'
+import { ChatBubble, Editor, NewMessageIndicator } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
 import { useUser } from '@/hooks/user'
 
@@ -28,16 +34,21 @@ interface Props {
 }
 
 export default function ChatWindow({ chat, onCreateChat }: Props) {
-  const [text, setText] = useState('')
+  const [newMessage, setNewMessage] = useState('')
+
+  const dummyElement = useRef<HTMLDivElement>(null)
 
   const { users } = useUser()
 
-  const q = query(
-    collection(db, `chats/${chat?.id}/messages`).withConverter(
-      messageConverter
-    ),
-    where('status', 'in', [MsgStatus.EDITED, MsgStatus.READ, MsgStatus.SENT]),
-    orderBy('timestamp', 'desc')
+  const q = useMemo(
+    () =>
+      query(
+        collection(db, `chats/${chat?.id}/messages`).withConverter(
+          messageConverter
+        ),
+        orderBy('timestamp', 'desc')
+      ),
+    [chat?.id]
   )
 
   const [messages, loading] = useCollectionData(q)
@@ -47,25 +58,22 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
     return users.find((user) => user.uid === uid)
   }, [chat?.participants, users])
 
-  const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    e.target.style.height = 'inherit'
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 400)}px`
-    setText(e.target.value)
-  }
-
   const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
-    setText('')
+    setNewMessage('')
     const id = generateId()
     return setDoc(
       doc(db, `chats/${chatID}/messages/${id}`).withConverter(messageConverter),
       {
         id,
         senderID,
-        content: text,
+        content: newMessage,
+        type: 'text',
         timestamp: +new Date(),
         status: MsgStatus.SENT,
       }
-    )
+    ).then(() => {
+      dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+    })
   }
 
   const handleClickSend = async () => {
@@ -95,7 +103,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
           },
         ],
         lastMessage: {
-          content: text,
+          content: newMessage,
           timestamp: +new Date(),
         },
       }
@@ -106,7 +114,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
       sendMessage(chat.id, currentUser?.uid)
       updateDoc(doc(db, `chats/${chat.id}`), {
         lastMessage: {
-          content: text,
+          content: newMessage,
           timestamp: +new Date(),
         },
         participantsMeta: chat.participantsMeta?.map((participant) => {
@@ -121,6 +129,38 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
       })
     }
   }
+
+  const showDateBanner = useCallback(
+    (currentDate: Message['timestamp'], previousDate: Message['timestamp']) =>
+      new Date(currentDate).getDate() !== new Date(previousDate).getDate(),
+    []
+  )
+
+  const dateBannerText = useCallback((date: Message['timestamp']) => {
+    if (!isValid(date)) {
+      return null
+    }
+    if (isToday(date)) {
+      return 'Today'
+    }
+    if (isYesterday(date)) {
+      return 'Yesterday'
+    }
+    return format(new Date(date), 'MMMM do, yyyy')
+  }, [])
+
+  const unreadCount = useMemo(
+    () =>
+      chat?.participantsMeta?.find(({ uid }) => uid === auth.currentUser?.uid)
+        ?.unreadCount ?? 0,
+    [chat?.participantsMeta]
+  )
+
+  useEffect(() => {
+    if (!loading) {
+      dummyElement.current?.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [loading])
 
   return (
     <main className="flex flex-grow bg-gray-100 dark:bg-black transition-colors">
@@ -152,61 +192,62 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
             </span>
           </header>
 
-          {/* <ScrollArea className="h-full"> */}
+          <div className="flex-grow" />
 
-          <div className="flex-grow flex flex-col-reverse gap-3 overflow-auto">
-            {loading &&
-              [1, 2, 3].map((x) => (
-                <ChatBubbleSkeleton
-                  type={chat.type}
-                  key={x}
-                  isCurrentUser={Math.random() < 0.5}
-                />
+          <ScrollArea>
+            <div className="flex flex-col-reverse gap-3 pt-2">
+              <div ref={dummyElement} />
+
+              {loading &&
+                [1, 2, 3].map((x) => (
+                  <ChatBubbleSkeleton
+                    type={chat.type}
+                    key={x}
+                    isCurrentUser={Math.random() < 0.5}
+                  />
+                ))}
+
+              {messages?.map((message, i) => (
+                <Fragment key={message.id}>
+                  <ChatBubble
+                    message={message}
+                    prevMsgSender={messages[i + 1]?.senderID}
+                    participantsMeta={chat.participantsMeta}
+                    type={chat.type}
+                    id={chat.id}
+                    isLast={i === 0}
+                  />
+                  {showDateBanner(
+                    message.timestamp,
+                    messages[i + 1]?.timestamp
+                  ) && (
+                    <div className="flex justify-center pointer-events-none">
+                      <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
+                        <em className="opacity-50">
+                          ~ {dateBannerText(message.timestamp)} ~
+                        </em>
+                      </div>
+                    </div>
+                  )}
+                </Fragment>
               ))}
-            {messages?.map((message, i) => (
-              <ChatBubble
-                key={message.id}
-                message={message}
-                prevMsgSender={messages[i + 1]?.senderID}
-                participantsMeta={chat.participantsMeta}
-                type={chat.type}
-                id={chat.id}
-              />
-            ))}
-          </div>
+            </div>
+          </ScrollArea>
 
-          {/* </ScrollArea> */}
-
-          <div className="p-5">
-            <Textarea
-              variant="chat"
-              rows={1}
-              startAdornment={
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <SmileyIcon />
-                </Button>
-              }
-              endAdornment={
-                text ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full"
-                    onClick={handleClickSend}
-                  >
-                    <SendIcon className="text-gray-500" />
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <PaperclipIcon />
-                  </Button>
-                )
-              }
-              className="px-[54px] py-3"
-              value={text}
-              onChange={handleInput}
+          {unreadCount > 0 && !loading && (
+            <NewMessageIndicator
+              messageCount={unreadCount}
+              onClick={() => {
+                dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+              }}
             />
-          </div>
+          )}
+
+          <Editor
+            value={newMessage}
+            onChange={setNewMessage}
+            onSubmit={handleClickSend}
+          />
         </div>
       ) : (
         <div />

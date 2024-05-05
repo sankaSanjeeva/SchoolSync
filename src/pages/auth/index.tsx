@@ -61,7 +61,7 @@ export default function Auth() {
   }, [navigate])
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center h-svh">
       <Button disabled={loading} onClick={handleSignUp}>
         {loading && <SpinnerIcon className="animate-spin mr-3" />}
         <span>Sign in with google</span>

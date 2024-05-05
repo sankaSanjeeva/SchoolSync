@@ -4,6 +4,7 @@ import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
 import { Chat } from '@/types'
 import { useUser } from '@/hooks/user'
+import { MsgStatus } from '@/enums'
 
 interface Props {
   chat?: Partial<Chat>
@@ -28,6 +29,24 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
       )?.unreadCount,
     [chat?.participantsMeta]
   )
+
+  const lastMessage = useMemo(() => {
+    if (
+      chat?.lastMessage?.status === MsgStatus.DELETED ||
+      chat?.lastMessage?.deletedFor?.includes(auth.currentUser?.uid ?? '')
+    ) {
+      return <em className="opacity-75">this message was deleted</em>
+    }
+
+    const element = document.createElement('div')
+    element.innerHTML = chat?.lastMessage?.content ?? ''
+
+    return <span>{element.textContent}</span>
+  }, [
+    chat?.lastMessage?.content,
+    chat?.lastMessage?.deletedFor,
+    chat?.lastMessage?.status,
+  ])
 
   return (
     <button
@@ -65,14 +84,14 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
           {formateTime(chat?.lastMessage?.timestamp)}
         </span>
 
-        <span
+        <div
           className={cn(
             'col-span-3 text-ellipsis overflow-hidden text-nowrap text-sm font-medium',
             unreadCount ? 'text-black dark:text-white' : 'text-gray-400'
           )}
         >
-          {chat?.lastMessage?.content}
-        </span>
+          {lastMessage}
+        </div>
       </div>
     </button>
   )

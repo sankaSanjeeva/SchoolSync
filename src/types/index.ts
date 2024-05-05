@@ -29,10 +29,7 @@ export type Chat = {
   type: ChatType
   participants: User['uid'][]
   participantsMeta: (Pick<User, 'uid'> & { unreadCount: number })[]
-  lastMessage?: {
-    content: string
-    timestamp: number
-  }
+  lastMessage: Partial<Message>
 }
 
 export const chatConverter: FirestoreDataConverter<Chat> = {
@@ -48,8 +45,11 @@ export type Message = {
   id: string
   senderID: User['uid']
   content: string
+  type: 'text' | 'photo' | 'video' | 'document'
   timestamp: number
   status: MsgStatus
+  edited?: boolean
+  deletedFor?: Chat['participants']
 }
 
 export const messageConverter: FirestoreDataConverter<Message> = {
