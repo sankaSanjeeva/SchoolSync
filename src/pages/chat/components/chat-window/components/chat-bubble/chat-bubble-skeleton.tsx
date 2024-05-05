@@ -18,7 +18,7 @@ export default function ChatBubbleSkeleton({ type, isCurrentUser }: Props) {
       {type === ChatType.GROUP && !isCurrentUser && (
         <>
           <Skeleton
-            className="col-start-2 mb-1 mx-3 h-4 max-w-40"
+            className="col-start-2 mb-1 mx-3 h-4 max-w-40 bg-gray-300"
             style={{ width: randomWidth() }}
           />
           <Skeleton className="h-12 w-12 mr-3 rounded-full" />
@@ -26,14 +26,14 @@ export default function ChatBubbleSkeleton({ type, isCurrentUser }: Props) {
       )}
       <Skeleton
         className={cn(
-          'col-start-2 h-12 self-center',
+          'col-start-2 h-12 self-center bg-gray-300',
           isCurrentUser && 'mr-0 ml-auto'
         )}
         style={{ width: randomWidth() }}
       />
       <Skeleton
         className={cn(
-          'col-start-2 h-4 w-16 mt-1 mx-3',
+          'col-start-2 h-4 w-16 mt-1 mx-3 bg-gray-300',
           isCurrentUser && 'mr-0 ml-auto'
         )}
       />

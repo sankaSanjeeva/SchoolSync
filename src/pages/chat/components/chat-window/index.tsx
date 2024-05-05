@@ -224,7 +224,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
                     <div className="flex justify-center pointer-events-none">
                       <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
                         <em className="opacity-50">
-                          - {dateBannerText(message.timestamp)} -
+                          ~ {dateBannerText(message.timestamp)} ~
                         </em>
                       </div>
                     </div>
