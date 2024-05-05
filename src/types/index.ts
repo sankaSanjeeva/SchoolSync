@@ -48,6 +48,7 @@ export type Message = {
   type: 'text' | 'photo' | 'video' | 'document'
   timestamp: number
   status: MsgStatus
+  edited?: boolean
   deletedFor?: Chat['participants']
 }
 

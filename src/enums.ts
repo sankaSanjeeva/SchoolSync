@@ -20,5 +20,4 @@ export enum MsgStatus {
   DELIVERED = 'delivered',
   READ = 'read',
   DELETED = 'deleted',
-  EDITED = 'edited',
 }

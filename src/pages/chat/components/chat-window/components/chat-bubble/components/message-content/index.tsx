@@ -58,7 +58,7 @@ export default function MessageContent(props: Props) {
         <DoubleTickIcon
           className={cn(
             'absolute bottom-0.5 right-1 transition-colors',
-            [MsgStatus.READ, MsgStatus.EDITED].includes(status) && 'text-theme'
+            status === MsgStatus.READ && 'text-theme'
           )}
         />
       )}

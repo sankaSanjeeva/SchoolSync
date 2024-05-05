@@ -37,7 +37,6 @@ export default function Actions({
   content,
   senderID,
   timestamp,
-  status,
   deletedFor = [],
   isLast,
 }: Props) {
@@ -60,16 +59,18 @@ export default function Actions({
   )
 
   const updateLastMessage = (
-    newStatus: Message['status'],
-    newDeletedFor = deletedFor
+    status?: Message['status'],
+    newDeletedFor?: Message['deletedFor'],
+    edited?: Message['edited']
   ) => {
     if (isLast) {
       updateDoc(doc(db, `chats/${chatId}`), {
         lastMessage: {
           content: newMessage,
-          status: newStatus,
-          deletedFor: newDeletedFor,
           timestamp,
+          ...(status ? { status } : {}),
+          ...(edited ? { edited } : {}),
+          ...(newDeletedFor ? { deletedFor: newDeletedFor } : {}),
         },
       })
     }
@@ -81,7 +82,7 @@ export default function Actions({
     updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
       deletedFor: newDeletedFor,
     })
-    updateLastMessage(status, newDeletedFor)
+    updateLastMessage(undefined, newDeletedFor)
   }
 
   const deleteMessageForEveryone = () => {
@@ -94,9 +95,9 @@ export default function Actions({
   const editMessage = () => {
     updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
       content: newMessage,
-      status: MsgStatus.EDITED,
+      edited: true,
     })
-    updateLastMessage(MsgStatus.EDITED)
+    updateLastMessage(undefined, undefined, true)
     setShowEditDialog(false)
   }
 
