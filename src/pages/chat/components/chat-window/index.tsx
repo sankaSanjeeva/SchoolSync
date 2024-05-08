@@ -163,10 +163,10 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
   }, [loading])
 
   return (
-    <main className="flex flex-grow bg-gray-100 dark:bg-black transition-colors">
+    <main className="flex flex-grow overflow-hidden bg-gray-100 dark:bg-black transition-colors">
       {chat ? (
         <div className="flex flex-col w-full">
-          <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center bg-white dark:bg-gray-900">
+          <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center shadow-lg dark:shadow-[0_5px_10px_0_black] z-10 bg-white dark:bg-gray-900 transition-colors">
             <div className="row-span-2">
               <Avatar active={conversant?.online}>
                 <AvatarImage src={conversant?.picture} />
@@ -247,6 +247,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={handleClickSend}
+            className="p-2 pt-0"
           />
         </div>
       ) : (

@@ -2,13 +2,15 @@ import { useMemo } from 'react'
 import ReactQuill, { ReactQuillProps } from 'react-quill'
 import { PaperclipIcon, SendIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import 'react-quill/dist/quill.snow.css'
 
 interface Props extends ReactQuillProps {
   onSubmit: () => void
+  className?: string
 }
 
-export default function Editor({ onSubmit, ...rest }: Props) {
+export default function Editor({ onSubmit, className, ...rest }: Props) {
   const textContent = useMemo(() => {
     const element = document.createElement('div')
     element.innerHTML = `${rest.value ?? ''}`
@@ -16,7 +18,12 @@ export default function Editor({ onSubmit, ...rest }: Props) {
   }, [rest.value])
 
   return (
-    <div className="relative p-2 [&_.ql-toolbar]:border-none [&_.ql-container]:border-none [&_.ql-container]:text-base">
+    <div
+      className={cn(
+        'relative [&_.ql-toolbar]:border-none [&_.ql-container]:border-none [&_.ql-container]:text-base [&_.ql-container]:max-h-[calc(100svh_-_144px)] [&_.ql-container]:overflow-auto',
+        className
+      )}
+    >
       <ReactQuill
         modules={{
           toolbar: [
@@ -25,7 +32,7 @@ export default function Editor({ onSubmit, ...rest }: Props) {
             ['clean'],
           ],
         }}
-        className="rounded-3xl shadow-lg bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote"
+        className="rounded-3xl shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black] bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote"
         placeholder="Type here"
         theme="snow"
         {...rest}

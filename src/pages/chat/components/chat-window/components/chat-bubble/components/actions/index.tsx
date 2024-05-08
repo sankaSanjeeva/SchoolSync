@@ -127,7 +127,7 @@ export default function Actions({
       </DropdownMenu>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl w-[96%]">
           <DialogTitle>Edit message</DialogTitle>
           <Editor
             value={newMessage}

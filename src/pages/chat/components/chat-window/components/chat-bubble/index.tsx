@@ -53,6 +53,14 @@ export default function ChatBubble({
     [message.senderID]
   )
 
+  const showEditedTag = useMemo(() => {
+    const isDeleted =
+      message.status === MsgStatus.DELETED ||
+      message.deletedFor?.includes(auth.currentUser?.uid ?? '')
+
+    return !isDeleted && message.edited
+  }, [message.deletedFor, message.edited, message.status])
+
   useEffect(() => {
     if (visible) {
       updateDoc(doc(db, `chats/${chatId}/messages/${message.id}`), {
@@ -109,7 +117,7 @@ export default function ChatBubble({
       {isUnreadMessage && <div ref={ref} />}
 
       <div className="col-start-2 flex justify-between gap-5 mt-1 px-3 font-medium text-xs text-gray-500">
-        <em>{message.edited && 'Edited'}</em>
+        <em>{showEditedTag && 'Edited'}</em>
         <span>{formateTime(message.timestamp)}</span>
       </div>
     </div>
