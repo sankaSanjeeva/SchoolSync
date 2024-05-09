@@ -26,19 +26,15 @@ import { ChatType, MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
 import { ChatBubble, Editor, NewMessageIndicator } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
-import { useUser } from '@/hooks/user'
+import { useChat, useUser } from '@/contexts'
 
-interface Props {
-  chat?: Partial<Chat>
-  onCreateChat: (chat: Props['chat']) => void
-}
-
-export default function ChatWindow({ chat, onCreateChat }: Props) {
+export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
 
   const dummyElement = useRef<HTMLDivElement>(null)
 
   const { users } = useUser()
+  const { chat, setChat } = useChat()
 
   const q = useMemo(
     () =>
@@ -109,7 +105,7 @@ export default function ChatWindow({ chat, onCreateChat }: Props) {
       }
       await setDoc(doc(db, `chats/${id}`).withConverter(chatConverter), newChat)
       sendMessage(id, currentUser?.uid)
-      onCreateChat(newChat)
+      setChat(newChat)
     } else {
       sendMessage(chat.id, currentUser?.uid)
       updateDoc(doc(db, `chats/${chat.id}`), {

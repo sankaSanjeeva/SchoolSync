@@ -6,7 +6,7 @@ import { Chat, Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
-import { useUser } from '@/hooks/user'
+import { useUser } from '@/contexts/user'
 import { MessageContent } from './components'
 
 interface Props

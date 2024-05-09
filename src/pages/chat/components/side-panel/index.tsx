@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { collection, orderBy, query, where } from 'firebase/firestore'
 import { SearchIcon, ThinArrowIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -13,8 +11,6 @@ import {
 } from './components'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
-import { auth, db } from '@/firebase'
-import { Chat, chatConverter } from '@/types'
 import { useMediaQuery } from '@/hooks'
 import {
   Drawer,
@@ -23,23 +19,16 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { cn } from '@/lib/utils'
+import { useChat } from '@/contexts'
 
 interface ContentProps {
-  loading: boolean
   isDesktop: boolean
-  chats: Chat[] | undefined
-  selectedChat: Partial<Chat> | undefined
-  onSelectChat: (chat?: Partial<Chat>) => void
 }
 
-function Content({
-  loading,
-  isDesktop,
-  chats,
-  selectedChat,
-  onSelectChat,
-}: ContentProps) {
+function Content({ isDesktop }: ContentProps) {
   const [searchParams, setSearchParams] = useSearchParams()
+
+  const { chats, loading } = useChat()
 
   const search = searchParams.get('search') ?? ''
 
@@ -52,14 +41,6 @@ function Content({
       } else {
         params.delete('search')
       }
-      return params
-    })
-  }
-
-  const handleSelectSearchedChat = (chat?: Partial<Chat>) => {
-    onSelectChat?.(chat)
-    setSearchParams((params) => {
-      params.delete('search')
       return params
     })
   }
@@ -81,16 +62,9 @@ function Content({
 
       <div className="mt-3">
         {search ? (
-          <SearchResult
-            chats={chats}
-            search={search}
-            onSelectChat={handleSelectSearchedChat}
-          />
+          <SearchResult chats={chats} search={search} />
         ) : (
-          <Tabs
-            defaultValue={Tab.ALL}
-            // onValueChange={(e) => console.log(e)}
-          >
+          <Tabs defaultValue={Tab.ALL}>
             <TabsList>
               <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
               <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
@@ -105,14 +79,7 @@ function Content({
                 </div>
               ) : (
                 <ScrollArea className="h-[calc(100vh_-_176px)]">
-                  {chats?.map((chat) => (
-                    <ChatItem
-                      key={chat.id}
-                      chat={chat}
-                      selectedChat={selectedChat}
-                      onSelectChat={onSelectChat}
-                    />
-                  ))}
+                  {chats?.map((chat) => <ChatItem key={chat.id} chat={chat} />)}
                 </ScrollArea>
               )}
             </TabsContent>
@@ -125,47 +92,19 @@ function Content({
   )
 }
 
-interface SidePanelProps {
-  selectedChat?: Partial<Chat>
-  onSelectChat?: (chat?: Partial<Chat>) => void
-}
-
-export default function SidePanel({
-  selectedChat,
-  onSelectChat,
-}: SidePanelProps) {
+export default function SidePanel() {
   const [drawerOpen, setDrawerOpen] = useState(true)
 
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
-  const [chats, loading] = useCollectionData(
-    query(
-      collection(db, 'chats').withConverter(chatConverter),
-      where('participants', 'array-contains', auth.currentUser?.uid),
-      orderBy('lastMessage.timestamp', 'desc')
-    )
-  )
+  const { chat } = useChat()
 
   useEffect(() => {
-    const chat = chats?.find(({ id }) => id === selectedChat?.id)
-    if (chat) {
-      onSelectChat?.(chat)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chats])
-
-  const handleSelectChat = (chat: Partial<Chat> | undefined) => {
-    onSelectChat?.(chat)
     setDrawerOpen(false)
-  }
+  }, [chat])
 
   if (isDesktop) {
-    return (
-      <Content
-        onSelectChat={handleSelectChat}
-        {...{ isDesktop, loading, chats, selectedChat }}
-      />
-    )
+    return <Content isDesktop={isDesktop} />
   }
 
   return (
@@ -174,10 +113,7 @@ export default function SidePanel({
         <ThinArrowIcon className="text-white dark:text-black" />
       </DrawerTrigger>
       <DrawerContent className="h-full">
-        <Content
-          onSelectChat={handleSelectChat}
-          {...{ isDesktop, loading, chats, selectedChat }}
-        />
+        <Content isDesktop={isDesktop} />
         <DrawerClose className="fixed w-10 h-10 rounded-full top-1/2 right-1 -translate-y-1/2 z-10 flex justify-center items-center bg-gray-500/50 shadow-[0_0_20px_5px_#72727287]">
           <ThinArrowIcon className="rotate-180 text-white dark:text-black" />
         </DrawerClose>

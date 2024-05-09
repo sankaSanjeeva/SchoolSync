@@ -1,19 +1,20 @@
 import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ChatItem from '../chat-item'
 import { Chat } from '@/types'
 import { auth } from '@/firebase'
-import { useUser } from '@/hooks/user'
+import { useUser } from '@/contexts'
 
 export default function SearchResult({
   chats,
   search,
-  onSelectChat,
 }: {
   chats: Chat[] | undefined
   search: string
-  onSelectChat?: (chat?: Partial<Chat>) => void
 }) {
+  const [, setSearchParams] = useSearchParams()
+
   const { users } = useUser()
 
   const filteredChats = useMemo(
@@ -52,6 +53,13 @@ export default function SearchResult({
       user.name.toLowerCase().includes(search.toLowerCase())
     )
   }, [usersWithNoChats, search])
+
+  const onSelectChat = () => {
+    setSearchParams((params) => {
+      params.delete('search')
+      return params
+    })
+  }
 
   return (
     <ScrollArea className="h-[calc(100vh_-_132px)]">

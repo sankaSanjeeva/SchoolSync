@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { onDisconnect, onValue, ref, update } from 'firebase/database'
 import { ChatWindow, SidePanel } from './components'
-import { Chat as C } from '@/types'
 import { auth, database } from '@/firebase'
-import { UserProvider } from '@/hooks/user'
+import { ChatProvider, UserProvider } from '@/contexts'
 
 export default function Chat() {
-  const [selectedChat, setSelectedChat] = useState<Partial<C>>()
-
   const uid = auth.currentUser?.uid
 
   const userRef = ref(database, `/users/${uid}`)
@@ -46,10 +43,12 @@ export default function Chat() {
 
   return (
     <UserProvider>
-      <div className="flex max-w-screen-lg mx-auto h-svh">
-        <SidePanel selectedChat={selectedChat} onSelectChat={setSelectedChat} />
-        <ChatWindow chat={selectedChat} onCreateChat={setSelectedChat} />
-      </div>
+      <ChatProvider>
+        <div className="flex max-w-screen-lg mx-auto h-svh">
+          <SidePanel />
+          <ChatWindow />
+        </div>
+      </ChatProvider>
     </UserProvider>
   )
 }
