@@ -3,17 +3,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
 import { Chat } from '@/types'
-import { useUser } from '@/hooks/user'
+import { useChat, useUser } from '@/contexts'
 import { MsgStatus } from '@/enums'
 
 interface Props {
-  chat?: Partial<Chat>
-  selectedChat?: Partial<Chat>
-  onSelectChat?: (chat: Props['chat']) => void
+  chat: Partial<Chat> | undefined
+  onSelectChat?: () => void
 }
 
-export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
+export default function ChatItem({ chat, onSelectChat }: Props) {
   const { users } = useUser()
+  const { chat: selectedChat, setChat } = useChat()
 
   const conversant = useMemo(() => {
     const conversantId = chat?.participants?.find(
@@ -48,6 +48,11 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
     chat?.lastMessage?.status,
   ])
 
+  const handleClick = () => {
+    setChat(chat)
+    onSelectChat?.()
+  }
+
   return (
     <button
       type="button"
@@ -56,7 +61,7 @@ export default function ChatItem({ chat, selectedChat, onSelectChat }: Props) {
         chat?.id === selectedChat?.id &&
           'bg-gray-200 dark:bg-black transition-colors'
       )}
-      onClick={() => onSelectChat?.(chat)}
+      onClick={handleClick}
     >
       <div className="w-full grid grid-cols-[auto_1fr_auto_auto] grid-rows-2 gap-x-2 [&>*]:self-center">
         <div className="row-span-2">

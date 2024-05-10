@@ -2,30 +2,24 @@ import { useEffect, useMemo } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
-import { Chat, Message } from '@/types'
+import { Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChatType, MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
-import { useUser } from '@/hooks/user'
+import { useChat, useUser } from '@/contexts'
 import { MessageContent } from './components'
 
-interface Props
-  extends Partial<Pick<Chat, 'id' | 'type' | 'participantsMeta'>> {
+interface Props {
   message: Message
   prevMsgSender: Message['senderID'] | undefined
   isLast: boolean
 }
 
-export default function ChatBubble({
-  message,
-  prevMsgSender,
-  id: chatId,
-  type,
-  participantsMeta,
-  isLast,
-}: Props) {
+export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
   const { ref, visible } = useElementIsVisible()
+
   const { users } = useUser()
+  const { chat } = useChat()
 
   const isCurrentUser = useMemo(
     () => auth.currentUser?.uid === message.senderID,
@@ -33,8 +27,8 @@ export default function ChatBubble({
   )
 
   const showConversantInfo = useMemo(
-    () => !isCurrentUser && type === ChatType.GROUP,
-    [isCurrentUser, type]
+    () => !isCurrentUser && chat?.type === ChatType.GROUP,
+    [chat?.type, isCurrentUser]
   )
 
   const isSameSender = useMemo(
@@ -53,14 +47,22 @@ export default function ChatBubble({
     [message.senderID]
   )
 
+  const showEditedTag = useMemo(() => {
+    const isDeleted =
+      message.status === MsgStatus.DELETED ||
+      message.deletedFor?.includes(auth.currentUser?.uid ?? '')
+
+    return !isDeleted && message.edited
+  }, [message.deletedFor, message.edited, message.status])
+
   useEffect(() => {
     if (visible) {
-      updateDoc(doc(db, `chats/${chatId}/messages/${message.id}`), {
+      updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
         status: MsgStatus.READ,
       })
 
-      updateDoc(doc(db, `chats/${chatId}`), {
-        participantsMeta: participantsMeta?.map((participant) => {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        participantsMeta: chat?.participantsMeta?.map((participant) => {
           if (participant.uid === auth.currentUser?.uid) {
             return {
               uid: participant.uid,
@@ -99,7 +101,6 @@ export default function ChatBubble({
       )}
 
       <MessageContent
-        chatId={chatId!}
         isCurrentUser={isCurrentUser}
         isLast={isLast}
         className="col-start-2 self-center"
@@ -109,7 +110,7 @@ export default function ChatBubble({
       {isUnreadMessage && <div ref={ref} />}
 
       <div className="col-start-2 flex justify-between gap-5 mt-1 px-3 font-medium text-xs text-gray-500">
-        <em>{message.edited && 'Edited'}</em>
+        <em>{showEditedTag && 'Edited'}</em>
         <span>{formateTime(message.timestamp)}</span>
       </div>
     </div>
