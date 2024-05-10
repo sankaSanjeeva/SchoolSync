@@ -208,9 +208,6 @@ export default function ChatWindow() {
                   <ChatBubble
                     message={message}
                     prevMsgSender={messages[i + 1]?.senderID}
-                    participantsMeta={chat.participantsMeta}
-                    type={chat.type}
-                    id={chat.id}
                     isLast={i === 0}
                   />
                   {showDateBanner(

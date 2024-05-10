@@ -1,4 +1,4 @@
-import { Chat, Message } from '@/types'
+import { Message } from '@/types'
 import Actions from '../actions'
 import { MsgStatus } from '@/enums'
 import { DoubleTickIcon } from '@/assets/icons'
@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { auth } from '@/firebase'
 
 interface Props extends Message {
-  chatId: Chat['id']
   isCurrentUser: boolean
   isLast: boolean
   className?: string

@@ -62,7 +62,7 @@ function Content({ isDesktop }: ContentProps) {
 
       <div className="mt-3">
         {search ? (
-          <SearchResult chats={chats} search={search} />
+          <SearchResult />
         ) : (
           <Tabs defaultValue={Tab.ALL}>
             <TabsList>

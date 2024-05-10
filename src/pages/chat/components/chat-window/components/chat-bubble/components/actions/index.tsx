@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { differenceInMinutes } from 'date-fns'
-import { doc, updateDoc } from 'firebase/firestore'
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { ChevronIcon } from '@/assets/icons'
-import { Chat, Message } from '@/types'
+import { Message } from '@/types'
 import { auth, db } from '@/firebase'
 import { MSG_DELETE_FOR_ME_TIMEOUT, MSG_EDIT_TIMEOUT } from '@/constants'
 import {
@@ -24,25 +24,28 @@ import {
 } from '@/components/ui/alert-dialog'
 import { MsgStatus } from '@/enums'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { useChat } from '@/contexts'
 import Editor from '../../../editor'
 
 interface Props extends Message {
-  chatId: Chat['id']
   isLast: boolean
 }
 
 export default function Actions({
-  chatId,
   id,
   content,
   senderID,
   timestamp,
-  deletedFor = [],
+  deletedFor,
+  status,
+  edited,
   isLast,
 }: Props) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [newMessage, setNewMessage] = useState(content)
+
+  const { chat } = useChat()
 
   const showEdit = useMemo(
     () =>
@@ -59,45 +62,44 @@ export default function Actions({
   )
 
   const updateLastMessage = (
-    status?: Message['status'],
-    newDeletedFor?: Message['deletedFor'],
-    edited?: Message['edited']
+    data: Partial<Pick<Message, 'status' | 'edited' | 'deletedFor'>>
   ) => {
     if (isLast) {
-      updateDoc(doc(db, `chats/${chatId}`), {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
         lastMessage: {
           content: newMessage,
           timestamp,
-          ...(status ? { status } : {}),
+          status,
           ...(edited ? { edited } : {}),
-          ...(newDeletedFor ? { deletedFor: newDeletedFor } : {}),
+          ...(deletedFor ? { deletedFor } : {}),
+          ...data,
         },
       })
     }
   }
 
   const deleteMessageForMe = () => {
-    const newDeletedFor = [...deletedFor, auth.currentUser?.uid ?? '']
-
-    updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
-      deletedFor: newDeletedFor,
+    updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
+      deletedFor: arrayUnion(auth.currentUser?.uid),
     })
-    updateLastMessage(undefined, newDeletedFor)
+    updateLastMessage({
+      deletedFor: [...(deletedFor ?? []), auth.currentUser?.uid ?? ''],
+    })
   }
 
   const deleteMessageForEveryone = () => {
-    updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
+    updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
       status: MsgStatus.DELETED,
     })
-    updateLastMessage(MsgStatus.DELETED)
+    updateLastMessage({ status: MsgStatus.DELETED })
   }
 
   const editMessage = () => {
-    updateDoc(doc(db, `chats/${chatId}/messages/${id}`), {
+    updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
       content: newMessage,
       edited: true,
     })
-    updateLastMessage(undefined, undefined, true)
+    updateLastMessage({ edited: true })
     setShowEditDialog(false)
   }
 

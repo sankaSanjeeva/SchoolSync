@@ -2,20 +2,16 @@ import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ChatItem from '../chat-item'
-import { Chat } from '@/types'
 import { auth } from '@/firebase'
-import { useUser } from '@/contexts'
+import { useChat, useUser } from '@/contexts'
 
-export default function SearchResult({
-  chats,
-  search,
-}: {
-  chats: Chat[] | undefined
-  search: string
-}) {
-  const [, setSearchParams] = useSearchParams()
+export default function SearchResult() {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const search = searchParams.get('search') ?? ''
 
   const { users } = useUser()
+  const { chats } = useChat()
 
   const filteredChats = useMemo(
     () =>
