@@ -4,15 +4,15 @@ export enum Role {
   User = 'User',
 }
 
-export enum Tab {
-  ALL = 'all',
+export enum ChatType {
   PRIVATE = 'private',
   GROUP = 'group',
 }
 
-export enum ChatType {
-  PERSONAL = 'personal',
-  GROUP = 'group',
+export enum Tab {
+  ALL = 'all',
+  PRIVATE = ChatType.PRIVATE,
+  GROUP = ChatType.GROUP,
 }
 
 export enum MsgStatus {

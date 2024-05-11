@@ -42,7 +42,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
   )
 
   const sender = useMemo(
-    () => users.find((user) => user.uid === message.senderID),
+    () => users?.find((user) => user.uid === message.senderID),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [message.senderID]
   )

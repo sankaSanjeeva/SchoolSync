@@ -8,18 +8,19 @@ import { MsgStatus } from '@/enums'
 
 interface Props {
   chat: Partial<Chat> | undefined
-  onSelectChat?: () => void
+  className?: string
+  onClick?: (chat: Partial<Chat> | undefined) => void
 }
 
-export default function ChatItem({ chat, onSelectChat }: Props) {
+export default function ChatItem({ chat, className, onClick }: Props) {
   const { users } = useUser()
-  const { chat: selectedChat, setChat } = useChat()
+  const { chat: selectedChat } = useChat()
 
   const conversant = useMemo(() => {
     const conversantId = chat?.participants?.find(
       (participant) => participant !== auth.currentUser?.uid
     )
-    return users.find((user) => user.uid === conversantId)
+    return users?.find((user) => user.uid === conversantId)
   }, [chat?.participants, users])
 
   const unreadCount = useMemo(
@@ -48,20 +49,15 @@ export default function ChatItem({ chat, onSelectChat }: Props) {
     chat?.lastMessage?.status,
   ])
 
-  const handleClick = () => {
-    setChat(chat)
-    onSelectChat?.()
-  }
-
   return (
     <button
       type="button"
       className={cn(
-        'p-[10px] pl-5 w-full text-left hover:bg-gray-200 dark:hover:bg-black transition-colors',
-        chat?.id === selectedChat?.id &&
-          'bg-gray-200 dark:bg-black transition-colors'
+        'p-[10px] pl-5 w-full text-left hover:bg-gray-200 dark:hover:bg-black transition-all',
+        chat?.id === selectedChat?.id && 'bg-gray-200 dark:bg-black',
+        className
       )}
-      onClick={handleClick}
+      onClick={() => onClick?.(chat)}
     >
       <div className="w-full grid grid-cols-[auto_1fr_auto_auto] grid-rows-2 gap-x-2 [&>*]:self-center">
         <div className="row-span-2">

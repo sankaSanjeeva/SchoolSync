@@ -51,7 +51,7 @@ export default function ChatWindow() {
 
   const conversant = useMemo(() => {
     const uid = chat?.participants?.find((u) => u !== auth.currentUser?.uid)
-    return users.find((user) => user.uid === uid)
+    return users?.find((user) => user.uid === uid)
   }, [chat?.participants, users])
 
   const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
@@ -83,7 +83,7 @@ export default function ChatWindow() {
       const id = generateId()
       const newChat = {
         id,
-        type: ChatType.PERSONAL,
+        type: chat?.type ?? ChatType.PRIVATE,
         participants: [
           ...(chat?.participants ?? []).map((participant) => participant),
           currentUser.uid,

@@ -9,7 +9,7 @@ type UserProviderProps = {
 }
 
 type UserProviderState = {
-  users: User[]
+  users: User[] | undefined
   loading: boolean
 }
 
@@ -21,13 +21,7 @@ const UserProviderContext = createContext<UserProviderState>({
 export function UserProvider({ children, ...props }: UserProviderProps) {
   const [users, loading] = useListVals<User>(ref(database, 'users'))
 
-  const value = useMemo(
-    () => ({
-      users: users ?? [],
-      loading,
-    }),
-    [loading, users]
-  )
+  const value = useMemo(() => ({ users, loading }), [loading, users])
 
   return (
     <UserProviderContext.Provider {...props} value={value}>
