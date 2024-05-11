@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { auth } from '@/firebase'
 import { Chat } from '@/types'
-import { ChatType } from '@/enums'
 import ChatItem from '../../../chat-item'
 
 export default function CretePrivateChat(props: DialogProps) {
@@ -39,7 +38,7 @@ export default function CretePrivateChat(props: DialogProps) {
         ?.map((user) => (
           <ChatItem
             key={user.uid}
-            chat={{ participants: [user.uid], type: ChatType.PRIVATE }}
+            chat={{ participants: [user.uid], type: 'private' }}
             onClick={onSelectUser}
           />
         )),

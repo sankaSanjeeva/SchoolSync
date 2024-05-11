@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { useChat, useUser } from '@/contexts'
 import { auth } from '@/firebase'
-import { ChatType } from '@/enums'
 import { Chat } from '@/types'
 import ChatItem from '../../../chat-item'
 
@@ -52,7 +51,7 @@ export default function CreteGroupChat(props: DialogProps) {
   const startChat = () => {
     setChat({
       participants,
-      type: ChatType.GROUP,
+      type: 'group',
     })
     onOpenChange?.(false)
   }

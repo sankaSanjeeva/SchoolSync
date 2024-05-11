@@ -10,7 +10,7 @@ import {
   TopIcons,
 } from './components'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ChatType, Tab } from '@/enums'
+import { Tab } from '@/enums'
 import { useMediaQuery } from '@/hooks'
 import {
   Drawer,
@@ -66,7 +66,7 @@ function Content({ isDesktop }: ContentProps) {
   const privateChats = useMemo(
     () =>
       chats
-        ?.filter((chat) => chat.type === ChatType.PRIVATE)
+        ?.filter((chat) => chat.type === 'private')
         ?.map((chat) => (
           <ChatItem key={chat.id} chat={chat} onClick={setChat} />
         )),
@@ -76,7 +76,7 @@ function Content({ isDesktop }: ContentProps) {
   const groupChats = useMemo(
     () =>
       chats
-        ?.filter((chat) => chat.type === ChatType.GROUP)
+        ?.filter((chat) => chat.type === 'group')
         ?.map((chat) => (
           <ChatItem key={chat.id} chat={chat} onClick={setChat} />
         )),

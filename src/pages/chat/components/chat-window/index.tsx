@@ -22,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { MoreIcon } from '@/assets/icons'
-import { ChatType, MsgStatus } from '@/enums'
+import { MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
 import { ChatBubble, Editor, NewMessageIndicator } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
@@ -83,7 +83,7 @@ export default function ChatWindow() {
       const id = generateId()
       const newChat = {
         id,
-        type: chat?.type ?? ChatType.PRIVATE,
+        type: chat?.type,
         participants: [
           ...(chat?.participants ?? []).map((participant) => participant),
           currentUser.uid,
@@ -102,8 +102,12 @@ export default function ChatWindow() {
           content: newMessage,
           timestamp: +new Date(),
         },
+        name: chat?.name,
       }
-      await setDoc(doc(db, `chats/${id}`).withConverter(chatConverter), newChat)
+      await setDoc(
+        doc(db, `chats/${id}`).withConverter(chatConverter),
+        newChat as Chat
+      )
       sendMessage(id, currentUser?.uid)
       setChat(newChat)
     } else {

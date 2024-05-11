@@ -5,7 +5,6 @@ import ChatItem from '../chat-item'
 import { auth } from '@/firebase'
 import { useChat, useUser } from '@/contexts'
 import { Chat } from '@/types'
-import { ChatType } from '@/enums'
 
 export default function SearchResult() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -81,7 +80,7 @@ export default function SearchResult() {
           {filteredUsersWithNoChat?.map((user) => (
             <ChatItem
               key={user.uid}
-              chat={{ participants: [user.uid], type: ChatType.PRIVATE }}
+              chat={{ participants: [user.uid], type: 'private' }}
               onClick={onSelectChat}
             />
           ))}

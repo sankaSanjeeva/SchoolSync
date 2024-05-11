@@ -4,7 +4,7 @@ import { auth, db } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
 import { Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ChatType, MsgStatus } from '@/enums'
+import { MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
 import { useChat, useUser } from '@/contexts'
 import { MessageContent } from './components'
@@ -27,7 +27,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
   )
 
   const showConversantInfo = useMemo(
-    () => !isCurrentUser && chat?.type === ChatType.GROUP,
+    () => !isCurrentUser && chat?.type === 'group',
     [chat?.type, isCurrentUser]
   )
 
