@@ -13,11 +13,13 @@ import { useChat, useUser } from '@/contexts'
 import { auth } from '@/firebase'
 import { Chat } from '@/types'
 import ChatItem from '../../../chat-item'
+import { Input } from '@/components/ui/input'
 
 export default function CreteGroupChat(props: DialogProps) {
   const { onOpenChange } = props
 
   const [participants, setParticipants] = useState<string[]>([])
+  const [name, setName] = useState('')
 
   const { users } = useUser()
   const { setChat } = useChat()
@@ -48,11 +50,13 @@ export default function CreteGroupChat(props: DialogProps) {
     [handleSelectUser, participants, users]
   )
 
+  const disableStart = useMemo(
+    () => participants.length < 1 || !name,
+    [name, participants.length]
+  )
+
   const startChat = () => {
-    setChat({
-      participants,
-      type: 'group',
-    })
+    setChat({ participants, type: 'group', name })
     onOpenChange?.(false)
   }
 
@@ -66,10 +70,18 @@ export default function CreteGroupChat(props: DialogProps) {
           </DialogDescription>
         </DialogHeader>
 
+        <Input
+          placeholder="Group Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
         <div>{userList}</div>
 
         <DialogFooter>
-          <Button onClick={startChat}>Start</Button>
+          <Button disabled={disableStart} onClick={startChat}>
+            Start
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

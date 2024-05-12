@@ -47,13 +47,17 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [message.senderID]
   )
 
-  const showEditedTag = useMemo(() => {
-    const isDeleted =
+  const isDeletedMessage = useMemo(
+    () =>
       message.status === MsgStatus.DELETED ||
-      message.deletedFor?.includes(auth.currentUser?.uid ?? '')
+      message.deletedFor?.includes(auth.currentUser?.uid ?? ''),
+    [message.deletedFor, message.status]
+  )
 
-    return !isDeleted && message.edited
-  }, [message.deletedFor, message.edited, message.status])
+  const showEditedTag = useMemo(
+    () => !isDeletedMessage && message.edited,
+    [isDeletedMessage, message.edited]
+  )
 
   useEffect(() => {
     if (visible) {
@@ -88,7 +92,12 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
       )}
     >
       {showConversantInfo && !isSameSender && (
-        <div className="col-start-2 mb-1 px-3 font-medium text-xs text-gray-500">
+        <div
+          className={cn(
+            'col-start-2  px-3 font-medium text-xs text-gray-500',
+            isDeletedMessage && !isCurrentUser ? '-mb-1' : 'mb-1'
+          )}
+        >
           {sender?.name}
         </div>
       )}
@@ -109,7 +118,12 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
 
       {isUnreadMessage && <div ref={ref} />}
 
-      <div className="col-start-2 flex justify-between gap-5 mt-1 px-3 font-medium text-xs text-gray-500">
+      <div
+        className={cn(
+          'col-start-2 flex justify-between gap-5 px-3 font-medium text-xs text-gray-500',
+          isDeletedMessage && !isCurrentUser ? '-mt-[6px]' : 'mt-1'
+        )}
+      >
         <em>{showEditedTag && 'Edited'}</em>
         <span>{formateTime(message.timestamp)}</span>
       </div>

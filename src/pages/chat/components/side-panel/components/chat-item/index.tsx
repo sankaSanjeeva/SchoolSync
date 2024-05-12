@@ -2,9 +2,10 @@ import { useMemo } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
-import { Chat } from '@/types'
+import { Chat, User } from '@/types'
 import { useChat, useUser } from '@/contexts'
 import { MsgStatus } from '@/enums'
+import { GroupIcon } from '@/assets/icons'
 
 interface Props {
   chat: Partial<Chat> | undefined
@@ -17,11 +18,16 @@ export default function ChatItem({ chat, className, onClick }: Props) {
   const { chat: selectedChat } = useChat()
 
   const conversant = useMemo(() => {
+    if (chat?.type === 'group') {
+      return {
+        name: chat.name,
+      } as User
+    }
     const conversantId = chat?.participants?.find(
       (participant) => participant !== auth.currentUser?.uid
     )
     return users?.find((user) => user.uid === conversantId)
-  }, [chat?.participants, users])
+  }, [chat?.name, chat?.participants, chat?.type, users])
 
   const unreadCount = useMemo(
     () =>
@@ -53,7 +59,7 @@ export default function ChatItem({ chat, className, onClick }: Props) {
     <button
       type="button"
       className={cn(
-        'p-[10px] pl-5 w-full text-left hover:bg-gray-200 dark:hover:bg-black transition-all',
+        'p-[10px] pl-5 w-full text-left transition-all',
         chat?.id === selectedChat?.id && 'bg-gray-200 dark:bg-black',
         className
       )}
@@ -64,7 +70,11 @@ export default function ChatItem({ chat, className, onClick }: Props) {
           <Avatar active={conversant?.online}>
             <AvatarImage src={conversant?.picture} />
             <AvatarFallback>
-              {conversant?.name?.at(0)?.toUpperCase()}
+              {chat?.type === 'private' ? (
+                conversant?.name?.at(0)?.toUpperCase()
+              ) : (
+                <GroupIcon className="h-8 w-8" />
+              )}
             </AvatarFallback>
           </Avatar>
         </div>

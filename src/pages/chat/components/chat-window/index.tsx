@@ -15,25 +15,21 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { format, formatDistance, isToday, isValid, isYesterday } from 'date-fns'
+import { format, isToday, isValid, isYesterday } from 'date-fns'
 import { auth, db } from '@/firebase'
 import { Chat, Message, chatConverter, messageConverter } from '@/types'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
-import { MoreIcon } from '@/assets/icons'
 import { MsgStatus } from '@/enums'
 import { generateId } from '@/lib/utils'
-import { ChatBubble, Editor, NewMessageIndicator } from './components'
+import { ChatBubble, Editor, Header, NewMessageIndicator } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
-import { useChat, useUser } from '@/contexts'
+import { useChat } from '@/contexts'
 
 export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
 
   const dummyElement = useRef<HTMLDivElement>(null)
 
-  const { users } = useUser()
   const { chat, setChat } = useChat()
 
   const q = useMemo(
@@ -48,11 +44,6 @@ export default function ChatWindow() {
   )
 
   const [messages, loading] = useCollectionData(q)
-
-  const conversant = useMemo(() => {
-    const uid = chat?.participants?.find((u) => u !== auth.currentUser?.uid)
-    return users?.find((user) => user.uid === uid)
-  }, [chat?.participants, users])
 
   const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
     setNewMessage('')
@@ -102,7 +93,7 @@ export default function ChatWindow() {
           content: newMessage,
           timestamp: +new Date(),
         },
-        name: chat?.name,
+        ...(chat?.name ? { name: chat?.name } : {}),
       }
       await setDoc(
         doc(db, `chats/${id}`).withConverter(chatConverter),
@@ -166,31 +157,7 @@ export default function ChatWindow() {
     <main className="flex flex-grow overflow-hidden bg-gray-100 dark:bg-black transition-colors">
       {chat ? (
         <div className="flex flex-col w-full">
-          <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center shadow-lg dark:shadow-[0_5px_10px_0_black] z-10 bg-white dark:bg-gray-900 transition-colors">
-            <div className="row-span-2">
-              <Avatar active={conversant?.online}>
-                <AvatarImage src={conversant?.picture} />
-                <AvatarFallback>
-                  {conversant?.name?.at(0)?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <span>{conversant?.name}</span>
-            <Button variant="ghost" size="icon" className="row-span-2">
-              <MoreIcon />
-            </Button>
-            <span className="text-xs text-gray-400">
-              {conversant?.online
-                ? 'Online'
-                : formatDistance(
-                    conversant?.lastOnline ?? new Date(),
-                    new Date(),
-                    {
-                      addSuffix: true,
-                    }
-                  )}
-            </span>
-          </header>
+          <Header />
 
           <div className="flex-grow" />
 
@@ -214,6 +181,7 @@ export default function ChatWindow() {
                     prevMsgSender={messages[i + 1]?.senderID}
                     isLast={i === 0}
                   />
+
                   {showDateBanner(
                     message.timestamp,
                     messages[i + 1]?.timestamp
