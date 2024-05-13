@@ -23,7 +23,8 @@ export default function CretePrivateChat(props: DialogProps) {
       const existingChat = chats?.find(
         (chat) =>
           chat.participants.includes(newChat?.participants?.[0] ?? '') &&
-          chat.participants.includes(auth.currentUser?.uid ?? '')
+          chat.participants.includes(auth.currentUser?.uid ?? '') &&
+          chat.type === 'private'
       )
       setChat(existingChat ?? newChat)
       onOpenChange?.(false)

@@ -111,9 +111,9 @@ export default function Actions({
             variant="ghost"
             size="icon"
             id="action-trigger"
-            className="absolute top-1 right-1 h-auto w-auto rounded-full opacity-0 transition-opacity"
+            className="absolute top-1 right-1 h-auto w-auto rounded-full hover:bg-black/15 opacity-0 transition-all"
           >
-            <ChevronIcon />
+            <ChevronIcon className="text-gray-800" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>

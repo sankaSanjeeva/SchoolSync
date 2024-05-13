@@ -73,7 +73,7 @@ export default function ChatItem({ chat, className, onClick }: Props) {
               {chat?.type === 'private' ? (
                 conversant?.name?.at(0)?.toUpperCase()
               ) : (
-                <GroupIcon className="h-8 w-8" />
+                <GroupIcon className="h-8 w-8 text-gray-500" />
               )}
             </AvatarFallback>
           </Avatar>
