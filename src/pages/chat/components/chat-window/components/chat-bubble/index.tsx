@@ -36,10 +36,12 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [message.senderID, prevMsgSender]
   )
 
-  const isUnreadMessage = useMemo(
-    () => !isCurrentUser && message.status === MsgStatus.SENT,
-    [isCurrentUser, message.status]
-  )
+  const isUnreadMessage = useMemo(() => {
+    if (chat?.type === 'private') {
+      return !isCurrentUser && message.status === MsgStatus.SENT
+    }
+    return !isCurrentUser && isLast
+  }, [chat?.type, isCurrentUser, isLast, message.status])
 
   const sender = useMemo(
     () => users?.find((user) => user.uid === message.senderID),
@@ -59,27 +61,37 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [isDeletedMessage, message.edited]
   )
 
+  const resetUnreadCount = () => {
+    updateDoc(doc(db, `chats/${chat?.id}`), {
+      participantsMeta: chat?.participantsMeta?.map((participant) => {
+        if (participant.uid === auth.currentUser?.uid) {
+          return {
+            uid: participant.uid,
+            /**
+             * Increase by one not working
+             */
+            // unreadCount: participant.unreadCount - 1,
+            unreadCount: 0,
+          }
+        }
+        return participant
+      }),
+    })
+  }
+
   useEffect(() => {
     if (visible) {
-      updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
-        status: MsgStatus.READ,
-      })
-
-      updateDoc(doc(db, `chats/${chat?.id}`), {
-        participantsMeta: chat?.participantsMeta?.map((participant) => {
-          if (participant.uid === auth.currentUser?.uid) {
-            return {
-              uid: participant.uid,
-              /**
-               * Increase by one not working
-               */
-              // unreadCount: participant.unreadCount - 1,
-              unreadCount: 0,
-            }
-          }
-          return participant
-        }),
-      })
+      if (chat?.type === 'private') {
+        updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
+          status: MsgStatus.READ,
+        })
+        resetUnreadCount()
+      } else if (
+        (chat?.participantsMeta?.find((p) => p.uid === auth.currentUser?.uid)
+          ?.unreadCount ?? 0) > 0
+      ) {
+        resetUnreadCount()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible])
