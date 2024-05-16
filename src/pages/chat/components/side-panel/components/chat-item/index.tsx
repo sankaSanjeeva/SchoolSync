@@ -60,7 +60,9 @@ export default function ChatItem({ chat, className, onClick }: Props) {
       type="button"
       className={cn(
         'p-[10px] pl-5 w-full text-left transition-all',
-        chat?.id === selectedChat?.id && 'bg-gray-200 dark:bg-black',
+        chat?.id &&
+          chat?.id === selectedChat?.id &&
+          'bg-gray-200 dark:bg-black',
         className
       )}
       onClick={() => onClick?.(chat)}
@@ -70,10 +72,10 @@ export default function ChatItem({ chat, className, onClick }: Props) {
           <Avatar active={conversant?.online}>
             <AvatarImage src={conversant?.picture} />
             <AvatarFallback>
-              {chat?.type === 'private' ? (
-                conversant?.name?.at(0)?.toUpperCase()
-              ) : (
+              {chat?.type === 'group' ? (
                 <GroupIcon className="h-8 w-8 text-gray-500" />
+              ) : (
+                conversant?.name?.at(0)?.toUpperCase()
               )}
             </AvatarFallback>
           </Avatar>

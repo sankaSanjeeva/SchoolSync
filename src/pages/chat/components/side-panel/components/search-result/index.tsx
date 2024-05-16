@@ -60,7 +60,7 @@ export default function SearchResult() {
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh_-_132px)]">
+    <ScrollArea className="h-[calc(100svh_-_132px)]">
       <div>
         <div className="text-sm font-bold px-5 py-3 sticky top-0 z-10 bg-white dark:bg-gray-900 transition-colors">
           CHATS

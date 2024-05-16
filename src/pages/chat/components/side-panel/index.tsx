@@ -27,7 +27,7 @@ interface ContentProps {
 
 function Skeleton() {
   return (
-    <div className="h-[calc(100vh_-_176px)] overflow-hidden">
+    <div className="h-[calc(100svh_-_176px)] overflow-hidden">
       {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
         <ChatItemSkeleton key={x} />
       ))}
@@ -114,7 +114,7 @@ function Content({ isDesktop }: ContentProps) {
                 GROUP
               </TabsTrigger>
             </TabsList>
-            <ScrollArea className="h-[calc(100vh_-_176px)]">
+            <ScrollArea className="h-[calc(100svh_-_176px)]">
               <TabsContent value={Tab.ALL}>
                 {loading ? <Skeleton /> : allChats}
               </TabsContent>
