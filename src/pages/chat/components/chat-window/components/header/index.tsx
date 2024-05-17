@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { formatDistance } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { GroupIcon, MoreIcon } from '@/assets/icons'
+import { GroupIcon, MoreIcon, PersonIcon } from '@/assets/icons'
 import { useChat, useUser } from '@/contexts'
 import { User } from '@/types'
 import { auth } from '@/firebase'
@@ -41,15 +41,15 @@ export default function Header() {
   ])
 
   return (
-    <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center shadow-lg dark:shadow-[0_5px_10px_0_black] z-10 bg-white dark:bg-gray-900 transition-colors">
+    <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center shadow-lg dark:shadow-[0_5px_10px_0_black] z-10 bg-white dark:bg-gray-900 transition-all">
       <div className="row-span-2">
         <Avatar active={conversant?.online}>
           <AvatarImage src={conversant?.picture} />
           <AvatarFallback>
-            {chat?.type === 'private' ? (
-              conversant?.name?.at(0)?.toUpperCase()
-            ) : (
+            {chat?.type === 'group' ? (
               <GroupIcon className="h-8 w-8 text-gray-500" />
+            ) : (
+              <PersonIcon className="h-8 w-8 text-gray-500" />
             )}
           </AvatarFallback>
         </Avatar>

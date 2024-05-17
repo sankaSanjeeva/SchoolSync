@@ -5,7 +5,7 @@ import { cn, formateTime } from '@/lib/utils'
 import { Chat, User } from '@/types'
 import { useChat, useUser } from '@/contexts'
 import { MsgStatus } from '@/enums'
-import { GroupIcon } from '@/assets/icons'
+import { GroupIcon, PersonIcon } from '@/assets/icons'
 
 interface Props {
   chat: Partial<Chat> | undefined
@@ -75,7 +75,7 @@ export default function ChatItem({ chat, className, onClick }: Props) {
               {chat?.type === 'group' ? (
                 <GroupIcon className="h-8 w-8 text-gray-500" />
               ) : (
-                conversant?.name?.at(0)?.toUpperCase()
+                <PersonIcon className="h-8 w-8 text-gray-500" />
               )}
             </AvatarFallback>
           </Avatar>

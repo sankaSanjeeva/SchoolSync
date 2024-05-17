@@ -8,7 +8,8 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: '',
-        search: 'rounded-full bg-gray-200 border-none dark:bg-black',
+        search:
+          'rounded-full bg-gray-200 border-none dark:bg-black transition-colors',
       },
     },
     defaultVariants: {

@@ -32,7 +32,7 @@ export default function Editor({ onSubmit, className, ...rest }: Props) {
             ['clean'],
           ],
         }}
-        className="rounded-3xl shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black] bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote"
+        className="rounded-3xl shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black] bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote transition-all"
         placeholder="Type here"
         theme="snow"
         {...rest}

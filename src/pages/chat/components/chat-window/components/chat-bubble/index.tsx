@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
 import { useChat, useUser } from '@/contexts'
+import { PersonIcon } from '@/assets/icons'
 import { MessageContent } from './components'
 
 interface Props {
@@ -117,7 +118,9 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
       {showConversantInfo && (
         <Avatar className={cn('mr-3 w-12 h-12', isSameSender && 'invisible')}>
           <AvatarImage src={sender?.picture} />
-          <AvatarFallback>{sender?.name?.at(0)?.toUpperCase()}</AvatarFallback>
+          <AvatarFallback>
+            <PersonIcon className="h-7 w-7 text-gray-500" />
+          </AvatarFallback>
         </Avatar>
       )}
 

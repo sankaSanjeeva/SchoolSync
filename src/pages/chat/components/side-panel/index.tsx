@@ -89,7 +89,7 @@ function Content({ isDesktop }: ContentProps) {
 
       <div className="px-5">
         <Input
-          placeholder="Search or start new chat"
+          placeholder="Search or Start a new chat"
           variant="search"
           className="pl-8"
           startAdornment={<SearchIcon className="text-gray-400" />}

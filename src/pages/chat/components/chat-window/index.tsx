@@ -212,7 +212,7 @@ export default function ChatWindow() {
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={handleClickSend}
-            className="p-2 pt-0"
+            className="px-2 -translate-y-2"
           />
         </div>
       ) : (
