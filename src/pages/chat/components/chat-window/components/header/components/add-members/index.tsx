@@ -1,5 +1,5 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
 import { useCallback, useMemo, useState } from 'react'
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore'
 import { DialogProps } from '@radix-ui/react-alert-dialog'
 import {
   Dialog,
@@ -12,27 +12,26 @@ import {
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useChat, useUser } from '@/contexts'
-import { auth } from '@/firebase'
+import { auth, db } from '@/firebase'
 import { Chat } from '@/types'
-import { ChatItem } from '@/components/common'
 import { Input } from '@/components/ui/input'
+import { ChatItem } from '@/components/common'
 
-export default function CreteGroupChat(props: DialogProps) {
+export default function AddMembers(props: DialogProps) {
   const { onOpenChange } = props
 
   const [participants, setParticipants] = useState<string[]>([])
-  const [name, setName] = useState('')
   const [search, setSearch] = useState('')
 
   const { users } = useUser()
-  const { setChat } = useChat()
+  const { chat, setChat } = useChat()
 
-  const handleSelectUser = useCallback((chat: Partial<Chat> | undefined) => {
+  const handleSelectUser = useCallback((c: Partial<Chat> | undefined) => {
     setParticipants((prev) => {
-      if (prev.includes(chat?.participants?.[0] ?? '')) {
-        return prev.filter((p) => p !== chat?.participants?.[0])
+      if (prev.includes(c?.participants?.[0] ?? '')) {
+        return prev.filter((p) => p !== c?.participants?.[0])
       }
-      return [...prev, chat?.participants?.[0] ?? '']
+      return [...prev, c?.participants?.[0] ?? '']
     })
   }, [])
 
@@ -41,8 +40,9 @@ export default function CreteGroupChat(props: DialogProps) {
       users
         ?.filter(
           (user) =>
-            user.uid !== auth.currentUser?.uid &&
-            user.name.toLowerCase().includes(search.toLowerCase())
+            ![auth.currentUser?.uid, ...(chat?.participants ?? [])].includes(
+              user.uid
+            ) && user.name.toLowerCase().includes(search.toLowerCase())
         )
         ?.map((user) => (
           <ChatItem
@@ -54,16 +54,24 @@ export default function CreteGroupChat(props: DialogProps) {
             }
           />
         )),
-    [handleSelectUser, participants, search, users]
+    [chat?.participants, handleSelectUser, participants, search, users]
   )
 
-  const disableStart = useMemo(
-    () => participants.length < 1 || !name,
-    [name, participants.length]
-  )
+  const addUsers = () => {
+    if (chat?.id) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        participants: arrayUnion(...participants),
+        participantsMeta: arrayUnion(
+          ...participants.map((uid) => ({ uid, unreadCount: 0 }))
+        ),
+      })
+    } else {
+      setChat({
+        ...chat,
+        participants: [...(chat?.participants ?? []), ...participants],
+      })
+    }
 
-  const startChat = () => {
-    setChat({ participants, type: 'group', name })
     onOpenChange?.(false)
   }
 
@@ -71,27 +79,14 @@ export default function CreteGroupChat(props: DialogProps) {
     <Dialog {...props}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Start a new group chat</DialogTitle>
+          <DialogTitle>Add new members</DialogTitle>
           <DialogDescription>
-            Select the people you want to chat with
+            Select the people you want to add
           </DialogDescription>
         </DialogHeader>
 
         <div>
-          <label className="text-sm" htmlFor="group-name">
-            Group Name
-          </label>
-          <Input
-            value={name}
-            className="mt-1"
-            id="group-name"
-            placeholder="Name"
-            autoComplete="off"
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-
-        <div>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="text-sm" htmlFor="search-users">
             Search Users
           </label>
@@ -105,11 +100,11 @@ export default function CreteGroupChat(props: DialogProps) {
           />
         </div>
 
-        <ScrollArea className="h-[calc(100svh_-_400px)]">{userList}</ScrollArea>
+        <ScrollArea className="h-[calc(100svh_-_316px)]">{userList}</ScrollArea>
 
         <DialogFooter>
-          <Button disabled={disableStart} onClick={startChat}>
-            Start
+          <Button disabled={participants.length < 1} onClick={addUsers}>
+            Add
           </Button>
         </DialogFooter>
       </DialogContent>

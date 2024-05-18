@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { formatDistance } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { GroupIcon, MoreIcon, PersonIcon } from '@/assets/icons'
+import { GroupIcon, PersonIcon } from '@/assets/icons'
 import { useChat, useUser } from '@/contexts'
 import { User } from '@/types'
 import { auth } from '@/firebase'
+import { Actions } from './components'
 
 export default function Header() {
   const { users } = useUser()
@@ -54,10 +54,12 @@ export default function Header() {
           </AvatarFallback>
         </Avatar>
       </div>
+
       <span>{conversant?.name}</span>
-      <Button variant="ghost" size="icon" className="row-span-2">
-        <MoreIcon />
-      </Button>
+
+      <div className="row-span-2">
+        <Actions />
+      </div>
 
       <span className="text-xs text-gray-400">{subText}</span>
     </header>

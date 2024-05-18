@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { auth } from '@/firebase'
 import { Chat } from '@/types'
-import ChatItem from '../../../chat-item'
+import { ChatItem } from '@/components/common'
 
 export default function CretePrivateChat(props: DialogProps) {
   const { onOpenChange } = props

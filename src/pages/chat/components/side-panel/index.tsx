@@ -3,12 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { SearchIcon, ThinArrowIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  ChatItem,
-  ChatItemSkeleton,
-  SearchResult,
-  TopIcons,
-} from './components'
+import { ChatItem, ChatItemSkeleton } from '@/components/common'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
 import { useMediaQuery } from '@/hooks'
@@ -20,6 +15,7 @@ import {
 } from '@/components/ui/drawer'
 import { cn } from '@/lib/utils'
 import { useChat } from '@/contexts'
+import { SearchResult, TopIcons } from './components'
 
 interface ContentProps {
   isDesktop: boolean

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import ChatItem from '../chat-item'
+import { ChatItem } from '@/components/common'
 import { auth } from '@/firebase'
 import { useChat, useUser } from '@/contexts'
 import { Chat } from '@/types'
