@@ -5,10 +5,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { ChevronIcon } from '@/assets/icons'
+import { ChevronIcon, PencilIcon, TrashIcon } from '@/assets/icons'
 import { Message } from '@/types'
 import { auth, db } from '@/firebase'
 import { MSG_DELETE_FOR_ME_TIMEOUT, MSG_EDIT_TIMEOUT } from '@/constants'
@@ -60,6 +61,13 @@ export default function Actions({
       differenceInMinutes(+new Date(), timestamp) < MSG_DELETE_FOR_ME_TIMEOUT,
     [senderID, timestamp]
   )
+
+  const handleEditorOpen = (open: boolean) => {
+    if (!open) {
+      setNewMessage(content)
+    }
+    setShowEditDialog(open)
+  }
 
   const updateLastMessage = (
     data: Partial<Pick<Message, 'status' | 'edited' | 'deletedFor'>>
@@ -113,28 +121,38 @@ export default function Actions({
             id="action-trigger"
             className="absolute top-1 right-1 h-auto w-auto rounded-full hover:bg-black/15 opacity-0 transition-all"
           >
-            <ChevronIcon className="text-gray-800" />
+            <ChevronIcon className="text-gray-800 dark:text-gray-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {showEdit && (
             <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
               Edit
+              <DropdownMenuShortcut>
+                <PencilIcon />
+              </DropdownMenuShortcut>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => setShowDeleteAlert(true)}>
+          <DropdownMenuItem
+            className="text-red-500 focus:!text-red-500"
+            onClick={() => setShowDeleteAlert(true)}
+          >
             Delete
+            <DropdownMenuShortcut>
+              <TrashIcon />
+            </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <Dialog open={showEditDialog} onOpenChange={handleEditorOpen}>
         <DialogContent className="max-w-2xl w-[96%]">
           <DialogTitle>Edit message</DialogTitle>
           <Editor
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={editMessage}
+            editMessage
           />
         </DialogContent>
       </Dialog>

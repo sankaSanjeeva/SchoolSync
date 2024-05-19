@@ -8,9 +8,15 @@ import 'react-quill/dist/quill.snow.css'
 interface Props extends ReactQuillProps {
   onSubmit: () => void
   className?: string
+  editMessage?: boolean
 }
 
-export default function Editor({ onSubmit, className, ...rest }: Props) {
+export default function Editor({
+  onSubmit,
+  className,
+  editMessage = false,
+  ...rest
+}: Props) {
   const textContent = useMemo(() => {
     const element = document.createElement('div')
     element.innerHTML = `${rest.value ?? ''}`
@@ -32,17 +38,21 @@ export default function Editor({ onSubmit, className, ...rest }: Props) {
             ['clean'],
           ],
         }}
-        className="rounded-3xl shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black] bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote transition-all"
+        className={cn(
+          'rounded-3xl shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black] bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote transition-all',
+          editMessage && 'shadow-none dark:shadow-none'
+        )}
         placeholder="Type here"
         theme="snow"
         {...rest}
       />
-      {textContent ? (
+      {textContent || editMessage ? (
         <Button
           size="icon"
           variant="ghost"
           className="rounded-full absolute right-2 top-1/2 -translate-y-1/2"
           onClick={onSubmit}
+          disabled={!textContent}
         >
           <SendIcon className="text-gray-500" />
         </Button>

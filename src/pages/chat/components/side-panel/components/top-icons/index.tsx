@@ -5,7 +5,7 @@ import {
   GroupIcon,
   LightModeIcon,
   LogoutIcon,
-  PencilIcon,
+  PenIcon,
   PersonIcon,
   SystemModeIcon,
 } from '@/assets/icons'
@@ -35,7 +35,7 @@ export default function TopIcons() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <PencilIcon />
+            <PenIcon />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
