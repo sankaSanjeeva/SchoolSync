@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MoreIcon, PersonIcon, TrashIcon } from '@/assets/icons'
+import { MoreIcon, PersonIcon, TrashIcon, TravelerIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,10 +9,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useChat } from '@/contexts'
-import AddMembers from '../add-members'
+import { AddMembers, LeaveGroup } from './components'
 
 export default function Actions() {
   const [showAddMember, setShowAddMember] = useState(false)
+  const [showLeaveAlert, setShowLeaveAlert] = useState(false)
 
   const { chat } = useChat()
 
@@ -33,21 +34,38 @@ export default function Actions() {
               </DropdownMenuShortcut>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem
-            disabled
-            className="text-red-500 focus:!text-red-500"
-          >
-            Delete Chat
-            <DropdownMenuShortcut>
-              <TrashIcon />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
+
+          {chat?.id && (
+            <DropdownMenuItem
+              disabled
+              className="text-red-500 focus:!text-red-500"
+            >
+              Delete Chat
+              <DropdownMenuShortcut>
+                <TrashIcon />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
+
+          {chat?.id && chat?.type === 'group' && (
+            <DropdownMenuItem
+              className="text-red-500 focus:!text-red-500"
+              onClick={() => setShowLeaveAlert(true)}
+            >
+              Leave Group
+              <DropdownMenuShortcut>
+                <TravelerIcon />
+              </DropdownMenuShortcut>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
       {showAddMember && (
         <AddMembers open={showAddMember} onOpenChange={setShowAddMember} />
       )}
+
+      <LeaveGroup open={showLeaveAlert} onOpenChange={setShowLeaveAlert} />
     </>
   )
 }

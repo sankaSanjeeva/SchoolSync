@@ -47,7 +47,7 @@ export default function CretePrivateChat(props: DialogProps) {
         ?.map((user) => (
           <ChatItem
             key={user.uid}
-            chat={{ participants: [user.uid] }}
+            chat={{ participants: [user.uid], type: 'private' }}
             onClick={onSelectUser}
           />
         )),
