@@ -9,11 +9,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useChat } from '@/contexts'
-import { AddMembers, LeaveGroup } from './components'
+import { AddMembers, DeleteChat, LeaveGroup } from './components'
 
 export default function Actions() {
   const [showAddMember, setShowAddMember] = useState(false)
   const [showLeaveAlert, setShowLeaveAlert] = useState(false)
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 
   const { chat } = useChat()
 
@@ -37,8 +38,8 @@ export default function Actions() {
 
           {chat?.id && (
             <DropdownMenuItem
-              disabled
               className="text-red-500 focus:!text-red-500"
+              onClick={() => setShowDeleteAlert(true)}
             >
               Delete Chat
               <DropdownMenuShortcut>
@@ -66,6 +67,8 @@ export default function Actions() {
       )}
 
       <LeaveGroup open={showLeaveAlert} onOpenChange={setShowLeaveAlert} />
+
+      <DeleteChat open={showDeleteAlert} onOpenChange={setShowDeleteAlert} />
     </>
   )
 }

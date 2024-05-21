@@ -13,6 +13,7 @@ import {
   query,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { format, isToday, isValid, isYesterday } from 'date-fns'
@@ -32,16 +33,19 @@ export default function ChatWindow() {
 
   const { chat, setChat } = useChat()
 
-  const q = useMemo(
-    () =>
-      query(
-        collection(db, `chats/${chat?.id}/messages`).withConverter(
-          messageConverter
-        ),
-        orderBy('timestamp', 'desc')
+  const q = useMemo(() => {
+    const lastDeletedOn =
+      chat?.participantsMeta?.find(({ uid }) => uid === auth.currentUser?.uid)
+        ?.lastDeletedOn ?? +new Date()
+
+    return query(
+      collection(db, `chats/${chat?.id}/messages`).withConverter(
+        messageConverter
       ),
-    [chat?.id]
-  )
+      where('timestamp', '>', lastDeletedOn),
+      orderBy('timestamp', 'desc')
+    )
+  }, [chat?.id, chat?.participantsMeta])
 
   const [messages, loading] = useCollectionData(q)
 
