@@ -34,10 +34,18 @@ type GroupChat = {
   name: string
 }
 
+/**
+ * participant's meta data relevant to the chat
+ */
+type ParticipantsMeta = {
+  unreadCount: number
+  lastDeletedOn: number
+} & Pick<User, 'uid'>
+
 export type Chat = {
   id: string
   participants: User['uid'][]
-  participantsMeta: (Pick<User, 'uid'> & { unreadCount: number })[]
+  participantsMeta: ParticipantsMeta[]
   lastMessage: Partial<Message>
 } & (PrivateChat | GroupChat)
 

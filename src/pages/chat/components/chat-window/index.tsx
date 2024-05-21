@@ -83,10 +83,12 @@ export default function ChatWindow() {
           ...(chat?.participants ?? []).map((participant) => ({
             uid: participant,
             unreadCount: 1,
+            lastDeletedOn: +new Date(),
           })),
           {
             uid: currentUser?.uid,
             unreadCount: 0,
+            lastDeletedOn: +new Date(),
           },
         ],
         lastMessage: {

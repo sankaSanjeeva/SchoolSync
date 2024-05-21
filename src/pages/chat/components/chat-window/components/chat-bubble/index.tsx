@@ -67,7 +67,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
       participantsMeta: chat?.participantsMeta?.map((participant) => {
         if (participant.uid === auth.currentUser?.uid) {
           return {
-            uid: participant.uid,
+            ...participant,
             /**
              * Increase by one not working
              */

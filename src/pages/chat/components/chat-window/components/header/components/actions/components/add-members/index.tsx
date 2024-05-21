@@ -62,7 +62,14 @@ export default function AddMembers(props: DialogProps) {
       updateDoc(doc(db, `chats/${chat?.id}`), {
         participants: arrayUnion(...participants),
         participantsMeta: arrayUnion(
-          ...participants.map((uid) => ({ uid, unreadCount: 0 }))
+          ...participants.map((uid) => ({
+            uid,
+            /**
+             * Users cannot see messages that were sent before they joined.
+             */
+            lastDeletedOn: +new Date(),
+            unreadCount: 0,
+          }))
         ),
       })
     } else {
