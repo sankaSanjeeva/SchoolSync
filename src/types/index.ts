@@ -39,7 +39,12 @@ type GroupChat = {
  */
 type ParticipantsMeta = {
   unreadCount: number
-  lastDeletedOn: number
+  lastDeletedOn?: number
+  /**
+   * Participant specific last message.
+   * eg:- "You deleted the message"
+   */
+  lastMessageContent?: string
 } & Pick<User, 'uid'>
 
 export type Chat = {

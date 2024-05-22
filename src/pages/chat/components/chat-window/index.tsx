@@ -36,7 +36,7 @@ export default function ChatWindow() {
   const q = useMemo(() => {
     const lastDeletedOn =
       chat?.participantsMeta?.find(({ uid }) => uid === auth.currentUser?.uid)
-        ?.lastDeletedOn ?? +new Date()
+        ?.lastDeletedOn ?? 0
 
     return query(
       collection(db, `chats/${chat?.id}/messages`).withConverter(
@@ -87,12 +87,10 @@ export default function ChatWindow() {
           ...(chat?.participants ?? []).map((participant) => ({
             uid: participant,
             unreadCount: 1,
-            lastDeletedOn: +new Date(),
           })),
           {
             uid: currentUser?.uid,
             unreadCount: 0,
-            lastDeletedOn: +new Date(),
           },
         ],
         lastMessage: {
@@ -115,11 +113,12 @@ export default function ChatWindow() {
           timestamp: +new Date(),
         },
         participantsMeta: chat.participantsMeta?.map((participant) => {
+          const { lastMessageContent, ...rest } = participant
           if (participant.uid === currentUser.uid) {
-            return participant
+            return rest
           }
           return {
-            ...participant,
+            ...rest,
             unreadCount: participant.unreadCount + 1,
           }
         }),

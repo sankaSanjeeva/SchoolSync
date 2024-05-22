@@ -38,6 +38,14 @@ export default function ChatItem({ chat, className, onClick }: Props) {
   )
 
   const lastMessage = useMemo(() => {
+    const message = chat?.participantsMeta?.find(
+      ({ uid }) => uid === auth.currentUser?.uid
+    )?.lastMessageContent
+
+    if (message) {
+      return <em className="opacity-75">{message}</em>
+    }
+
     if (
       chat?.lastMessage?.status === MsgStatus.DELETED ||
       chat?.lastMessage?.deletedFor?.includes(auth.currentUser?.uid ?? '')
@@ -53,6 +61,7 @@ export default function ChatItem({ chat, className, onClick }: Props) {
     chat?.lastMessage?.content,
     chat?.lastMessage?.deletedFor,
     chat?.lastMessage?.status,
+    chat?.participantsMeta,
   ])
 
   return (

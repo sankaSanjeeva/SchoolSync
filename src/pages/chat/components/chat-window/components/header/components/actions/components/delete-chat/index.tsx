@@ -20,7 +20,11 @@ export default function DeleteChat(props: DialogProps) {
     updateDoc(doc(db, `chats/${chat?.id}`), {
       participantsMeta: chat?.participantsMeta?.map((participant) => {
         if (participant.uid === auth.currentUser?.uid) {
-          return { ...participant, lastDeletedOn: +new Date() }
+          return {
+            ...participant,
+            lastMessageContent: 'you deleted chat',
+            lastDeletedOn: +new Date(),
+          }
         }
         return participant
       }),
