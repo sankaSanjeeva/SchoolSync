@@ -37,9 +37,6 @@ export default function Actions({
   content,
   senderID,
   timestamp,
-  deletedFor,
-  status,
-  edited,
   isLast,
 }: Props) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
@@ -69,37 +66,42 @@ export default function Actions({
     setShowEditDialog(open)
   }
 
-  const updateLastMessage = (
-    data: Partial<Pick<Message, 'status' | 'edited' | 'deletedFor'>>
-  ) => {
-    if (isLast) {
-      updateDoc(doc(db, `chats/${chat?.id}`), {
-        lastMessage: {
-          content: newMessage,
-          timestamp,
-          status,
-          ...(edited ? { edited } : {}),
-          ...(deletedFor ? { deletedFor } : {}),
-          ...data,
-        },
-      })
-    }
-  }
-
   const deleteMessageForMe = () => {
     updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
       deletedFor: arrayUnion(auth.currentUser?.uid),
     })
-    updateLastMessage({
-      deletedFor: [...(deletedFor ?? []), auth.currentUser?.uid ?? ''],
-    })
+
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        participantsMeta: chat?.participantsMeta?.map((participant) => {
+          if (participant.uid === auth.currentUser?.uid) {
+            return {
+              ...participant,
+              lastMessageContent: 'you deleted this message',
+            }
+          }
+          return participant
+        }),
+      })
+    }
   }
 
   const deleteMessageForEveryone = () => {
     updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
       status: MsgStatus.DELETED,
     })
-    updateLastMessage({ status: MsgStatus.DELETED })
+
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        participantsMeta: chat?.participantsMeta?.map((participant) => ({
+          ...participant,
+          lastMessageContent:
+            participant.uid === auth.currentUser?.uid
+              ? 'you deleted this message'
+              : 'this message was deleted',
+        })),
+      })
+    }
   }
 
   const editMessage = () => {
@@ -107,7 +109,16 @@ export default function Actions({
       content: newMessage,
       edited: true,
     })
-    updateLastMessage({ edited: true })
+
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        lastMessage: {
+          content: newMessage,
+          timestamp,
+        },
+      })
+    }
+
     setShowEditDialog(false)
   }
 

@@ -4,7 +4,6 @@ import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
 import { Chat, User } from '@/types'
 import { useChat, useUser } from '@/contexts'
-import { MsgStatus } from '@/enums'
 import { GroupIcon, PersonIcon } from '@/assets/icons'
 
 interface Props {
@@ -46,23 +45,11 @@ export default function ChatItem({ chat, className, onClick }: Props) {
       return <em className="opacity-75">{message}</em>
     }
 
-    if (
-      chat?.lastMessage?.status === MsgStatus.DELETED ||
-      chat?.lastMessage?.deletedFor?.includes(auth.currentUser?.uid ?? '')
-    ) {
-      return <em className="opacity-75">this message was deleted</em>
-    }
-
     const element = document.createElement('div')
     element.innerHTML = chat?.lastMessage?.content ?? ''
 
     return <span>{element.textContent}</span>
-  }, [
-    chat?.lastMessage?.content,
-    chat?.lastMessage?.deletedFor,
-    chat?.lastMessage?.status,
-    chat?.participantsMeta,
-  ])
+  }, [chat?.lastMessage?.content, chat?.participantsMeta])
 
   return (
     <button
