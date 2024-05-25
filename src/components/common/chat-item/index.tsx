@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
-import { cn, formateTime } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Chat, User } from '@/types'
 import { useChat, useUser } from '@/contexts'
 import { GroupIcon, PersonIcon } from '@/assets/icons'
@@ -104,7 +105,7 @@ export default function ChatItem({ chat, className, onClick }: Props) {
         )}
 
         <span className="text-xs font-medium text-gray-500">
-          {formateTime(chat?.lastMessage?.timestamp)}
+          {format(chat?.lastMessage?.timestamp ?? 0, 'p')}
         </span>
 
         <div

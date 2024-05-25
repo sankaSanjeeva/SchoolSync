@@ -11,10 +11,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { auth, db } from '@/firebase'
-import { useChat } from '@/contexts'
+import { useChat, useUser } from '@/contexts'
+import { sendMessage } from '@/pages/chat/utils'
 
 export default function LeaveGroup(props: DialogProps) {
-  const { chat } = useChat()
+  const { chat, setChat } = useChat()
+  const { user } = useUser()
 
   const handleLeaveGroup = () => {
     updateDoc(doc(db, `chats/${chat?.id}`), {
@@ -25,6 +27,11 @@ export default function LeaveGroup(props: DialogProps) {
         (meta) => meta.uid !== auth.currentUser?.uid
       ),
     })
+    sendMessage(chat?.id ?? '', {
+      content: `${user?.name} left the group`,
+      type: 'info',
+    })
+    setChat(undefined)
   }
 
   return (

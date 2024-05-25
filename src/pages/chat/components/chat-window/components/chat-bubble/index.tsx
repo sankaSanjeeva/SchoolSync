@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
+import { format } from 'date-fns'
 import { auth, db } from '@/firebase'
-import { cn, formateTime } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MsgStatus } from '@/enums'
@@ -131,7 +132,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
         )}
       >
         <em>{showEditedTag && 'Edited'}</em>
-        <span>{formateTime(message.timestamp)}</span>
+        <span>{format(message.timestamp, 'p')}</span>
       </div>
     </div>
   )

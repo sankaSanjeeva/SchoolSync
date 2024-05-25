@@ -16,6 +16,7 @@ import { auth, db } from '@/firebase'
 import { Chat } from '@/types'
 import { Input } from '@/components/ui/input'
 import { ChatItem } from '@/components/common'
+import { sendMessage } from '@/pages/chat/utils'
 
 export default function AddMembers(props: DialogProps) {
   const { onOpenChange } = props
@@ -23,7 +24,7 @@ export default function AddMembers(props: DialogProps) {
   const [participants, setParticipants] = useState<string[]>([])
   const [search, setSearch] = useState('')
 
-  const { users } = useUser()
+  const { user, users } = useUser()
   const { chat, setChat } = useChat()
 
   const handleSelectUser = useCallback((c: Partial<Chat> | undefined) => {
@@ -39,18 +40,18 @@ export default function AddMembers(props: DialogProps) {
     () =>
       users
         ?.filter(
-          (user) =>
+          ({ uid, name }) =>
             ![auth.currentUser?.uid, ...(chat?.participants ?? [])].includes(
-              user.uid
-            ) && user.name.toLowerCase().includes(search.toLowerCase())
+              uid
+            ) && name.toLowerCase().includes(search.toLowerCase())
         )
-        ?.map((user) => (
+        ?.map(({ uid }) => (
           <ChatItem
-            key={user.uid}
-            chat={{ participants: [user.uid] }}
+            key={uid}
+            chat={{ participants: [uid] }}
             onClick={handleSelectUser}
             className={
-              participants.includes(user.uid) ? 'opacity-100' : 'opacity-50'
+              participants.includes(uid) ? 'opacity-100' : 'opacity-50'
             }
           />
         )),
@@ -71,6 +72,10 @@ export default function AddMembers(props: DialogProps) {
             unreadCount: 0,
           }))
         ),
+      })
+      sendMessage(chat.id, {
+        content: `${user?.name} added ${participants.map((p) => users?.find(({ uid }) => p === uid)?.name).join(', ')}`,
+        type: 'info',
       })
     } else {
       setChat({

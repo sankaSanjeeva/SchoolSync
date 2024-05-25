@@ -18,20 +18,27 @@ import {
 import { useCollectionData } from 'react-firebase-hooks/firestore'
 import { format, isToday, isValid, isYesterday } from 'date-fns'
 import { auth, db } from '@/firebase'
-import { Chat, Message, chatConverter, messageConverter } from '@/types'
+import { Message, messageConverter } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { MsgStatus } from '@/enums'
-import { generateId } from '@/lib/utils'
-import { ChatBubble, Editor, Header, NewMessageIndicator } from './components'
+import { generateId, sendMessage } from '@/pages/chat/utils'
+import {
+  ChatBubble,
+  Editor,
+  Header,
+  InfoBanner,
+  NewMessageIndicator,
+} from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
-import { useChat } from '@/contexts'
+import { useChat, useUser } from '@/contexts'
 
 export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
+  const [isChatInitiating, setIsChatInitiating] = useState(false)
 
   const dummyElement = useRef<HTMLDivElement>(null)
 
   const { chat, setChat } = useChat()
+  const { user } = useUser()
 
   const q = useMemo(() => {
     const lastDeletedOn =
@@ -49,39 +56,23 @@ export default function ChatWindow() {
 
   const [messages, loading] = useCollectionData(q)
 
-  const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
-    setNewMessage('')
-    const id = generateId()
-    return setDoc(
-      doc(db, `chats/${chatID}/messages/${id}`).withConverter(messageConverter),
-      {
-        id,
-        senderID,
-        content: newMessage,
-        type: 'text',
-        timestamp: +new Date(),
-        status: MsgStatus.SENT,
-      }
-    ).then(() => {
-      dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
-    })
-  }
-
   const handleClickSend = async () => {
-    const { currentUser } = auth
+    setNewMessage('')
 
-    if (!currentUser) {
+    if (!auth.currentUser) {
       throw new Error('currentUser is not defined')
     }
 
     if (!chat?.id) {
+      setIsChatInitiating(true)
+
       const id = generateId()
       const newChat = {
         id,
         type: chat?.type,
         participants: [
           ...(chat?.participants ?? []).map((participant) => participant),
-          currentUser.uid,
+          auth.currentUser.uid,
         ],
         participantsMeta: [
           ...(chat?.participants ?? []).map((participant) => ({
@@ -89,7 +80,7 @@ export default function ChatWindow() {
             unreadCount: 1,
           })),
           {
-            uid: currentUser?.uid,
+            uid: auth.currentUser.uid,
             unreadCount: 0,
           },
         ],
@@ -99,14 +90,19 @@ export default function ChatWindow() {
         },
         ...(chat?.name ? { name: chat?.name } : {}),
       }
-      await setDoc(
-        doc(db, `chats/${id}`).withConverter(chatConverter),
-        newChat as Chat
-      )
-      sendMessage(id, currentUser?.uid)
+
+      await setDoc(doc(db, `chats/${id}`), newChat)
       setChat(newChat)
+      await sendMessage(id, {
+        content: `${user?.name} started the conversation`,
+        type: 'info',
+      })
+      await sendMessage(id, { content: newMessage })
+      setIsChatInitiating(false)
     } else {
-      sendMessage(chat.id, currentUser?.uid)
+      sendMessage(chat.id, { content: newMessage }).then(() => {
+        dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+      })
       updateDoc(doc(db, `chats/${chat.id}`), {
         lastMessage: {
           content: newMessage,
@@ -114,7 +110,7 @@ export default function ChatWindow() {
         },
         participantsMeta: chat.participantsMeta?.map((participant) => {
           const { lastMessageContent, ...rest } = participant
-          if (participant.uid === currentUser.uid) {
+          if (participant.uid === auth.currentUser?.uid) {
             return rest
           }
           return {
@@ -170,7 +166,7 @@ export default function ChatWindow() {
             <div className="flex flex-col-reverse gap-3 pt-2">
               <div ref={dummyElement} />
 
-              {loading &&
+              {(loading || isChatInitiating) &&
                 [1, 2, 3].map((x) => (
                   <ChatBubbleSkeleton
                     type={chat.type}
@@ -181,23 +177,25 @@ export default function ChatWindow() {
 
               {messages?.map((message, i) => (
                 <Fragment key={message.id}>
-                  <ChatBubble
-                    message={message}
-                    prevMsgSender={messages[i + 1]?.senderID}
-                    isLast={i === 0}
-                  />
+                  {message.type === 'text' && (
+                    <ChatBubble
+                      message={message}
+                      prevMsgSender={messages[i + 1]?.senderID}
+                      isLast={i === 0}
+                    />
+                  )}
+
+                  {message.type === 'info' && (
+                    <InfoBanner>{message.content}</InfoBanner>
+                  )}
 
                   {showDateBanner(
                     message.timestamp,
                     messages[i + 1]?.timestamp
                   ) && (
-                    <div className="flex justify-center pointer-events-none">
-                      <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
-                        <em className="opacity-50">
-                          ~ {dateBannerText(message.timestamp)} ~
-                        </em>
-                      </div>
-                    </div>
+                    <InfoBanner>
+                      ~ {dateBannerText(message.timestamp)} ~
+                    </InfoBanner>
                   )}
                 </Fragment>
               ))}
