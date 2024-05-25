@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
@@ -13,6 +13,8 @@ interface Props {
 }
 
 export default function ChatItem({ chat, className, onClick }: Props) {
+  const batchElement = useRef<HTMLSpanElement>(null)
+
   const { users } = useUser()
   const { chat: selectedChat } = useChat()
 
@@ -51,6 +53,15 @@ export default function ChatItem({ chat, className, onClick }: Props) {
     return <span>{element.textContent}</span>
   }, [chat?.lastMessage?.content, chat?.participantsMeta])
 
+  useEffect(() => {
+    batchElement.current?.animate(
+      {
+        opacity: [0, 1],
+      },
+      500
+    )
+  }, [lastMessage])
+
   return (
     <button
       type="button"
@@ -82,7 +93,10 @@ export default function ChatItem({ chat, className, onClick }: Props) {
         </span>
 
         {unreadCount ? (
-          <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-theme">
+          <span
+            ref={batchElement}
+            className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-theme"
+          >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : (

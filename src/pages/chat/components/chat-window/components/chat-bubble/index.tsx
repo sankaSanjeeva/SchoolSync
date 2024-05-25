@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase'
 import { cn, formateTime } from '@/lib/utils'
-import { Chat, Message, chatConverter } from '@/types'
+import { Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MsgStatus } from '@/enums'
 import { useElementIsVisible } from '@/hooks'
@@ -37,13 +37,6 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [message.senderID, prevMsgSender]
   )
 
-  const isUnreadMessage = useMemo(() => {
-    if (chat?.type === 'private') {
-      return !isCurrentUser && message.status === MsgStatus.SENT
-    }
-    return !isCurrentUser && isLast
-  }, [chat?.type, isCurrentUser, isLast, message.status])
-
   const sender = useMemo(
     () => users?.find((user) => user.uid === message.senderID),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,11 +55,9 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [isDeletedMessage, message.edited]
   )
 
-  const resetUnreadCount = (
-    participantsMeta: Chat['participantsMeta'] | undefined
-  ) => {
+  const resetUnreadCount = () => {
     updateDoc(doc(db, `chats/${chat?.id}`), {
-      participantsMeta: participantsMeta?.map((participant) => {
+      participantsMeta: chat?.participantsMeta?.map((participant) => {
         if (participant.uid === auth.currentUser?.uid) {
           return {
             ...participant,
@@ -79,32 +70,21 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
   }
 
   useEffect(() => {
-    if (visible) {
-      /**
-       * TODO: need to check
-       * Get fresh data before update.
-       * If not this use old data of participantsMeta
-       */
-      getDoc(doc(db, `chats/${chat?.id}`).withConverter(chatConverter)).then(
-        (res) => {
-          const participantsMeta = res.data()?.participantsMeta
+    const hasUnreadMessages = chat?.participantsMeta?.find(
+      ({ uid }) => uid === auth.currentUser?.uid
+    )?.unreadCount
 
-          if (chat?.type === 'private') {
-            updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
-              status: MsgStatus.READ,
-            })
-            resetUnreadCount(participantsMeta)
-          } else if (
-            (participantsMeta?.find(({ uid }) => uid === auth.currentUser?.uid)
-              ?.unreadCount ?? 0) > 0
-          ) {
-            resetUnreadCount(participantsMeta)
-          }
-        }
-      )
+    if (visible && hasUnreadMessages) {
+      if (chat?.type === 'private') {
+        updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
+          status: MsgStatus.READ,
+        })
+        resetUnreadCount()
+      }
+      resetUnreadCount()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible])
+  }, [visible, chat?.participantsMeta])
 
   return (
     <div
@@ -140,7 +120,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
         {...message}
       />
 
-      {isUnreadMessage && <div ref={ref} />}
+      {isLast && <div ref={ref} />}
 
       <div
         className={cn(
