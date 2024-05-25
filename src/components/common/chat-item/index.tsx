@@ -105,7 +105,8 @@ export default function ChatItem({ chat, className, onClick }: Props) {
         )}
 
         <span className="text-xs font-medium text-gray-500">
-          {format(chat?.lastMessage?.timestamp ?? 0, 'p')}
+          {chat?.lastMessage?.timestamp &&
+            format(chat.lastMessage.timestamp, 'p')}
         </span>
 
         <div

@@ -20,7 +20,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTheme } from '@/lib/theme'
+import { useTheme } from '@/contexts'
 import { CreteGroupChat, CretePrivateChat, SignOutAlert } from './components'
 
 export default function TopIcons() {
