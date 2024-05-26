@@ -56,6 +56,16 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [isDeletedMessage, message.edited]
   )
 
+  const showFakeDivRef = useMemo(
+    () =>
+      !isCurrentUser &&
+      // if group chat
+      ((chat?.type === 'group' && isLast) ||
+        // if private chat
+        (chat?.type === 'private' && message.status === MsgStatus.SENT)),
+    [chat?.type, isCurrentUser, isLast, message.status]
+  )
+
   const resetUnreadCount = () => {
     updateDoc(doc(db, `chats/${chat?.id}`), {
       participantsMeta: chat?.participantsMeta?.map((participant) => {
@@ -71,21 +81,18 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
   }
 
   useEffect(() => {
-    const hasUnreadMessages = chat?.participantsMeta?.find(
-      ({ uid }) => uid === auth.currentUser?.uid
-    )?.unreadCount
-
-    if (visible && hasUnreadMessages) {
+    if (visible) {
       if (chat?.type === 'private') {
         updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
           status: MsgStatus.READ,
         })
+      }
+      if (isLast) {
         resetUnreadCount()
       }
-      resetUnreadCount()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, chat?.participantsMeta])
+  }, [visible])
 
   return (
     <div
@@ -121,7 +128,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
         {...message}
       />
 
-      {isLast && <div ref={ref} />}
+      {showFakeDivRef && <div ref={ref} />}
 
       <div
         className={cn(

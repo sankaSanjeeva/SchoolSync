@@ -92,13 +92,13 @@ export default function ChatWindow() {
       }
 
       await setDoc(doc(db, `chats/${id}`), newChat)
-      setChat(newChat)
       await sendMessage(id, {
         content: `${user?.name} started the conversation`,
         type: 'info',
       })
       await sendMessage(id, { content: newMessage })
       setIsChatInitiating(false)
+      setChat(newChat)
     } else {
       sendMessage(chat.id, { content: newMessage }).then(() => {
         dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
@@ -171,7 +171,7 @@ export default function ChatWindow() {
                   <ChatBubbleSkeleton
                     type={chat.type}
                     key={x}
-                    isCurrentUser={Math.random() < 0.5}
+                    isCurrentUser={x % 2 > 0}
                   />
                 ))}
 
