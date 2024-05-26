@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import ReactQuill, { ReactQuillProps } from 'react-quill'
 import { PaperclipIcon, SendIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
+import { useMediaQuery } from '@/hooks'
 import { cn } from '@/lib/utils'
 import 'react-quill/dist/quill.snow.css'
 
@@ -17,11 +18,24 @@ export default function Editor({
   editMessage = false,
   ...rest
 }: Props) {
-  const textContent = useMemo(() => {
+  const editorHint = useRef<HTMLSpanElement>(null)
+
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
+  const hasTextContent = useMemo(() => {
     const element = document.createElement('div')
     element.innerHTML = `${rest.value ?? ''}`
-    return element.textContent
+    return !!element.textContent
   }, [rest.value])
+
+  useEffect(() => {
+    editorHint.current?.animate(
+      {
+        opacity: [0, 0.4],
+      },
+      300
+    )
+  }, [hasTextContent])
 
   return (
     <div
@@ -29,6 +43,12 @@ export default function Editor({
         'relative [&_.ql-toolbar]:border-none [&_.ql-container]:border-none [&_.ql-container]:text-base [&_.ql-container]:max-h-[calc(100svh_-_144px)] [&_.ql-container]:overflow-auto',
         className
       )}
+      onKeyDownCapture={(e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault()
+          onSubmit()
+        }
+      }}
     >
       <ReactQuill
         modules={{
@@ -46,13 +66,13 @@ export default function Editor({
         theme="snow"
         {...rest}
       />
-      {textContent || editMessage ? (
+      {hasTextContent || editMessage ? (
         <Button
           size="icon"
           variant="ghost"
           className="rounded-full absolute right-2 top-1/2 -translate-y-1/2"
           onClick={onSubmit}
-          disabled={!textContent}
+          disabled={!hasTextContent}
         >
           <SendIcon className="text-gray-500" />
         </Button>
@@ -64,6 +84,14 @@ export default function Editor({
         >
           <PaperclipIcon className="text-gray-500" />
         </Button>
+      )}
+      {hasTextContent && isDesktop && (
+        <span
+          className="absolute top-1 right-14 text-xs opacity-40"
+          ref={editorHint}
+        >
+          Shift + Enter to add a new line
+        </span>
       )}
     </div>
   )

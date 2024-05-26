@@ -13,7 +13,7 @@ export const generateId = (): string => {
   return id
 }
 
-export const sendMessage = (chatId: Chat['id'], messages: Partial<Message>) => {
+export const sendMessage = (chatId: Chat['id'], message: Partial<Message>) => {
   const id = generateId()
 
   return setDoc(
@@ -21,10 +21,10 @@ export const sendMessage = (chatId: Chat['id'], messages: Partial<Message>) => {
     {
       id,
       type: 'text',
-      senderID: auth.currentUser?.uid,
       timestamp: +new Date(),
       status: MsgStatus.SENT,
-      ...messages,
+      ...(message.type !== 'info' ? { senderID: auth.currentUser?.uid } : {}),
+      ...message,
     }
   )
 }
