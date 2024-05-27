@@ -1,12 +1,10 @@
-import { useEffect, useMemo } from 'react'
-import { doc, updateDoc } from 'firebase/firestore'
+import { useMemo } from 'react'
 import { format } from 'date-fns'
-import { auth, db } from '@/firebase'
+import { auth } from '@/firebase'
 import { cn } from '@/lib/utils'
 import { Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MsgStatus } from '@/enums'
-import { useElementIsVisible } from '@/hooks'
 import { useChat, useUser } from '@/contexts'
 import { PersonIcon } from '@/assets/icons'
 import { MessageContent } from './components'
@@ -18,8 +16,6 @@ interface Props {
 }
 
 export default function ChatBubble({ message, prevMessage, isLast }: Props) {
-  const { ref, visible } = useElementIsVisible()
-
   const { users } = useUser()
   const { chat } = useChat()
 
@@ -57,44 +53,6 @@ export default function ChatBubble({ message, prevMessage, isLast }: Props) {
     () => !isDeletedMessage && message.edited,
     [isDeletedMessage, message.edited]
   )
-
-  const showFakeDivRef = useMemo(
-    () =>
-      !isCurrentUser &&
-      // if group chat
-      ((chat?.type === 'group' && isLast) ||
-        // if private chat
-        (chat?.type === 'private' && message.status === MsgStatus.SENT)),
-    [chat?.type, isCurrentUser, isLast, message.status]
-  )
-
-  const resetUnreadCount = () => {
-    updateDoc(doc(db, `chats/${chat?.id}`), {
-      participantsMeta: chat?.participantsMeta?.map((participant) => {
-        if (participant.uid === auth.currentUser?.uid) {
-          return {
-            ...participant,
-            unreadCount: 0,
-          }
-        }
-        return participant
-      }),
-    })
-  }
-
-  useEffect(() => {
-    if (visible) {
-      if (chat?.type === 'private') {
-        updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
-          status: MsgStatus.READ,
-        })
-      }
-      if (isLast) {
-        resetUnreadCount()
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible])
 
   return (
     <div
@@ -134,8 +92,6 @@ export default function ChatBubble({ message, prevMessage, isLast }: Props) {
         className="col-start-2 self-center"
         {...message}
       />
-
-      {showFakeDivRef && <div ref={ref} />}
 
       <div
         className={cn(

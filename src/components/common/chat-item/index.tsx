@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
@@ -14,8 +14,6 @@ interface Props {
 }
 
 export default function ChatItem({ chat, className, onClick }: Props) {
-  const batchElement = useRef<HTMLSpanElement>(null)
-
   const { users } = useUser()
   const { chat: selectedChat } = useChat()
 
@@ -54,14 +52,22 @@ export default function ChatItem({ chat, className, onClick }: Props) {
     return <span>{element.textContent}</span>
   }, [chat?.lastMessage?.content, chat?.participantsMeta])
 
-  useEffect(() => {
-    batchElement.current?.animate(
-      {
-        opacity: [0, 1],
-      },
-      500
-    )
-  }, [lastMessage])
+  /**
+   * If unread message count blinks when send a new message, add below logic
+   */
+
+  // const batchElement = useRef<HTMLSpanElement>(null)
+
+  // useEffect(() => {
+  //   batchElement.current?.animate(
+  //     {
+  //       opacity: [0, 1],
+  //     },
+  //     500
+  //   )
+  // }, [unreadCount])
+
+  // <span ref={batchElement}>{unreadCount > 99 ? '99+' : unreadCount}</span>
 
   return (
     <button
@@ -94,10 +100,7 @@ export default function ChatItem({ chat, className, onClick }: Props) {
         </span>
 
         {unreadCount ? (
-          <span
-            ref={batchElement}
-            className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-theme"
-          >
+          <span className="text-xs px-1 pt-0.5 pb-1 rounded-full text-white leading-none bg-theme">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         ) : (

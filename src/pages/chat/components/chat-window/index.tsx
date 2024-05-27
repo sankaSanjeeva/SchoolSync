@@ -1,11 +1,4 @@
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   collection,
   doc,
@@ -32,6 +25,7 @@ import {
   Editor,
   Header,
   InfoBanner,
+  MessageWrapper,
   NewMessageIndicator,
 } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
@@ -121,7 +115,7 @@ export default function ChatWindow() {
     if (
       differenceInCalendarDays(
         new Date(),
-        messages?.[0].timestamp ?? new Date()
+        messages?.[0]?.timestamp ?? new Date()
       ) > 0
     ) {
       await sendMessage(chat.id, {
@@ -231,9 +225,13 @@ export default function ChatWindow() {
                 ))}
 
               {messages?.map((message, index) => (
-                <Fragment key={message.id}>
+                <MessageWrapper
+                  key={message.id}
+                  message={message}
+                  isLast={index === 0}
+                >
                   {getMessageType(message, index)}
-                </Fragment>
+                </MessageWrapper>
               ))}
             </div>
           </ScrollArea>
