@@ -13,11 +13,11 @@ import { MessageContent } from './components'
 
 interface Props {
   message: Message
-  prevMsgSender: Message['senderID'] | undefined
+  prevMessage: Message | undefined
   isLast: boolean
 }
 
-export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
+export default function ChatBubble({ message, prevMessage, isLast }: Props) {
   const { ref, visible } = useElementIsVisible()
 
   const { users } = useUser()
@@ -33,9 +33,11 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
     [chat?.type, isCurrentUser]
   )
 
-  const isSameSender = useMemo(
-    () => message.senderID === prevMsgSender,
-    [message.senderID, prevMsgSender]
+  const showNameAndAvatar = useMemo(
+    () =>
+      message.senderID !== prevMessage?.senderID ||
+      ['info', 'time'].includes(prevMessage.type),
+    [message.senderID, prevMessage?.senderID, prevMessage?.type]
   )
 
   const sender = useMemo(
@@ -101,7 +103,7 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
         isCurrentUser && 'mr-0 ml-auto'
       )}
     >
-      {showConversantInfo && !isSameSender && (
+      {showConversantInfo && showNameAndAvatar && (
         <div
           className={cn(
             'col-start-2  px-3 font-medium text-xs text-gray-500',
@@ -113,7 +115,12 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
       )}
 
       {showConversantInfo && (
-        <Avatar className={cn('mr-3 w-12 h-12', isSameSender && 'invisible')}>
+        <Avatar
+          className={cn(
+            'mr-3 w-12 h-12 invisible',
+            showNameAndAvatar && 'visible'
+          )}
+        >
           <AvatarImage src={sender?.picture} />
           <AvatarFallback>
             <PersonIcon className="h-7 w-7 text-gray-500" />

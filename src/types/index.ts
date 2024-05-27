@@ -67,7 +67,7 @@ export type Message = {
   id: string
   senderID: User['uid']
   content: string
-  type: 'text' | 'photo' | 'video' | 'document' | 'info'
+  type: 'text' | 'photo' | 'video' | 'document' | 'info' | 'time'
   timestamp: number
   status: MsgStatus
   edited?: boolean

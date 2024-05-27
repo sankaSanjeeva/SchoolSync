@@ -16,7 +16,13 @@ import {
   where,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { format, isToday, isValid, isYesterday } from 'date-fns'
+import {
+  differenceInCalendarDays,
+  format,
+  isToday,
+  isValid,
+  isYesterday,
+} from 'date-fns'
 import { auth, db } from '@/firebase'
 import { Message, messageConverter } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -92,41 +98,61 @@ export default function ChatWindow() {
       }
 
       await setDoc(doc(db, `chats/${id}`), newChat)
-      await sendMessage(id, {
-        content: `${user?.name} started the conversation`,
-        type: 'info',
-      })
-      await sendMessage(id, { content: newMessage })
+      await sendMessage(id, [
+        {
+          content: `${user?.name} started the conversation`,
+          timestamp: +new Date(),
+          type: 'info',
+        },
+        {
+          content: (+new Date()).toString(),
+          timestamp: +new Date() + 1,
+          type: 'time',
+        },
+        { content: newMessage, timestamp: +new Date() + 2 },
+      ])
+
       setIsChatInitiating(false)
       setChat(newChat)
-    } else {
-      sendMessage(chat.id, { content: newMessage }).then(() => {
+
+      return
+    }
+
+    if (
+      differenceInCalendarDays(
+        new Date(),
+        messages?.[0].timestamp ?? new Date()
+      ) > 0
+    ) {
+      await sendMessage(chat.id, {
+        content: (+new Date()).toString(),
+        type: 'time',
+      }).then(() => {
         dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
       })
-      updateDoc(doc(db, `chats/${chat.id}`), {
-        lastMessage: {
-          content: newMessage,
-          timestamp: +new Date(),
-        },
-        participantsMeta: chat.participantsMeta?.map((participant) => {
-          const { lastMessageContent, ...rest } = participant
-          if (participant.uid === auth.currentUser?.uid) {
-            return rest
-          }
-          return {
-            ...rest,
-            unreadCount: participant.unreadCount + 1,
-          }
-        }),
-      })
     }
-  }
 
-  const showDateBanner = useCallback(
-    (currentDate: Message['timestamp'], previousDate: Message['timestamp']) =>
-      new Date(currentDate).getDate() !== new Date(previousDate).getDate(),
-    []
-  )
+    sendMessage(chat.id, { content: newMessage }).then(() => {
+      dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+    })
+
+    updateDoc(doc(db, `chats/${chat.id}`), {
+      lastMessage: {
+        content: newMessage,
+        timestamp: +new Date(),
+      },
+      participantsMeta: chat.participantsMeta?.map((participant) => {
+        const { lastMessageContent, ...rest } = participant
+        if (participant.uid === auth.currentUser?.uid) {
+          return rest
+        }
+        return {
+          ...rest,
+          unreadCount: participant.unreadCount + 1,
+        }
+      }),
+    })
+  }
 
   const dateBannerText = useCallback((date: Message['timestamp']) => {
     if (!isValid(date)) {
@@ -140,6 +166,35 @@ export default function ChatWindow() {
     }
     return format(new Date(date), 'MMMM do, yyyy')
   }, [])
+
+  const getMessageType = useCallback(
+    (message: Message, index: number) => {
+      switch (message.type) {
+        case 'text':
+          return (
+            <ChatBubble
+              message={message}
+              prevMessage={messages?.[index + 1]}
+              isLast={index === 0}
+            />
+          )
+
+        case 'info':
+          return <InfoBanner>{message.content}</InfoBanner>
+
+        case 'time':
+          return (
+            <InfoBanner>
+              ~ {dateBannerText(Number(message.content))} ~
+            </InfoBanner>
+          )
+
+        default:
+          return null
+      }
+    },
+    [dateBannerText, messages]
+  )
 
   const unreadCount = useMemo(
     () =>
@@ -175,28 +230,9 @@ export default function ChatWindow() {
                   />
                 ))}
 
-              {messages?.map((message, i) => (
+              {messages?.map((message, index) => (
                 <Fragment key={message.id}>
-                  {message.type === 'text' && (
-                    <ChatBubble
-                      message={message}
-                      prevMsgSender={messages[i + 1]?.senderID}
-                      isLast={i === 0}
-                    />
-                  )}
-
-                  {message.type === 'info' && (
-                    <InfoBanner>{message.content}</InfoBanner>
-                  )}
-
-                  {showDateBanner(
-                    message.timestamp,
-                    messages[i + 1]?.timestamp
-                  ) && (
-                    <InfoBanner>
-                      ~ {dateBannerText(message.timestamp)} ~
-                    </InfoBanner>
-                  )}
+                  {getMessageType(message, index)}
                 </Fragment>
               ))}
             </div>
