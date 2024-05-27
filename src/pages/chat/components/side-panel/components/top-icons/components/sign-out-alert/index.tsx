@@ -1,6 +1,7 @@
 import { DialogProps } from '@radix-ui/react-alert-dialog'
+import { ref, update } from 'firebase/database'
 import { signOut } from 'firebase/auth'
-import { auth } from '@/firebase'
+import { auth, database } from '@/firebase'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +15,10 @@ import {
 
 export default function SignOutAlert(props: DialogProps) {
   const handleSignOut = () => {
+    update(ref(database, `/users/${auth.currentUser?.uid}`), {
+      online: false,
+      lastOnline: +new Date(),
+    })
     signOut(auth)
   }
 
