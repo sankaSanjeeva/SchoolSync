@@ -30,6 +30,7 @@ import {
 } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
 import { useChat, useUser } from '@/contexts'
+import { MsgStatus } from '@/enums'
 
 export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
@@ -103,7 +104,11 @@ export default function ChatWindow() {
           timestamp: +new Date() + 1,
           type: 'time',
         },
-        { content: newMessage, timestamp: +new Date() + 2 },
+        {
+          content: newMessage,
+          timestamp: +new Date() + 2,
+          status: MsgStatus.SENT,
+        },
       ])
 
       setIsChatInitiating(false)

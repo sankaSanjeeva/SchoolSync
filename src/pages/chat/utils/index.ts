@@ -1,7 +1,7 @@
 import { doc, setDoc, writeBatch } from 'firebase/firestore'
+import { Chat, Message, messageConverter as converter } from '@/types'
 import { MsgStatus } from '@/enums'
 import { auth, db } from '@/firebase'
-import { Chat, Message, messageConverter } from '@/types'
 
 export const generateId = (): string => {
   const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -15,7 +15,9 @@ export const generateId = (): string => {
 
 export const sendMessage = (
   chatId: Chat['id'],
-  messages: Partial<Message> | Partial<Message>[]
+  messages:
+    | (Pick<Message, 'content'> & Partial<Message>)
+    | (Pick<Message, 'content' | 'timestamp'> & Partial<Message>)[]
 ) => {
   if (Array.isArray(messages)) {
     const batch = writeBatch(db)
@@ -23,13 +25,15 @@ export const sendMessage = (
     messages.forEach((message) => {
       const id = generateId()
 
-      batch.set(doc(db, `chats/${chatId}/messages/${id}`), {
-        id,
-        type: 'text',
-        timestamp: +new Date(),
-        senderID: auth.currentUser?.uid,
-        ...message,
-      })
+      batch.set(
+        doc(db, `chats/${chatId}/messages/${id}`).withConverter(converter),
+        {
+          id,
+          type: 'text',
+          senderID: auth.currentUser?.uid,
+          ...message,
+        }
+      )
     })
 
     return batch.commit()
@@ -38,7 +42,7 @@ export const sendMessage = (
   const id = generateId()
 
   return setDoc(
-    doc(db, `chats/${chatId}/messages/${id}`).withConverter(messageConverter),
+    doc(db, `chats/${chatId}/messages/${id}`).withConverter(converter),
     {
       id,
       type: 'text',
