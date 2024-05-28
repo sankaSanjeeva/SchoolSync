@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SearchIcon, ThinArrowIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -52,30 +53,64 @@ function Content({ isDesktop }: ContentProps) {
   }
 
   const allChats = useMemo(
-    () =>
-      chats?.map((chat) => (
-        <ChatItem key={chat.id} chat={chat} onClick={setChat} />
-      )),
+    () => (
+      <AnimatePresence>
+        {chats?.map((chat) => (
+          <motion.div
+            key={chat.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            layout
+          >
+            <ChatItem key={chat.id} chat={chat} onClick={setChat} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    ),
+
     [chats, setChat]
   )
 
   const privateChats = useMemo(
-    () =>
-      chats
-        ?.filter((chat) => chat.type === 'private')
-        ?.map((chat) => (
-          <ChatItem key={chat.id} chat={chat} onClick={setChat} />
-        )),
+    () => (
+      <AnimatePresence>
+        {chats
+          ?.filter((chat) => chat.type === 'private')
+          ?.map((chat) => (
+            <motion.div
+              key={chat.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              layout
+            >
+              <ChatItem key={chat.id} chat={chat} onClick={setChat} />
+            </motion.div>
+          ))}
+      </AnimatePresence>
+    ),
     [chats, setChat]
   )
 
   const groupChats = useMemo(
-    () =>
-      chats
-        ?.filter((chat) => chat.type === 'group')
-        ?.map((chat) => (
-          <ChatItem key={chat.id} chat={chat} onClick={setChat} />
-        )),
+    () => (
+      <AnimatePresence>
+        {chats
+          ?.filter((chat) => chat.type === 'group')
+          ?.map((chat) => (
+            <motion.div
+              key={chat.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              layout
+            >
+              <ChatItem key={chat.id} chat={chat} onClick={setChat} />
+            </motion.div>
+          ))}
+      </AnimatePresence>
+    ),
     [chats, setChat]
   )
 
