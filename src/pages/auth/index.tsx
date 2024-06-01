@@ -4,10 +4,9 @@ import { useSignInWithGoogle } from 'react-firebase-hooks/auth'
 import { getAdditionalUserInfo, onAuthStateChanged } from 'firebase/auth'
 import { ref, set } from 'firebase/database'
 import { auth, database } from '@/firebase'
-import { Button } from '@/components/ui/button'
 import { Role } from '@/enums'
-import { SpinnerIcon } from '@/assets/icons'
 import { User } from '@/types'
+import { Intro, Logo, SignInButton } from './components'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -61,11 +60,15 @@ export default function Auth() {
   }, [navigate])
 
   return (
-    <div className="flex justify-center items-center h-svh">
-      <Button disabled={loading} onClick={handleSignUp}>
-        {loading && <SpinnerIcon className="animate-spin mr-3" />}
-        <span>Sign in with google</span>
-      </Button>
+    <div className="flex flex-col md:flex-row justify-evenly items-center h-svh">
+      <div className="w-full sm:w-4/5 md:w-auto md:h-4/5">
+        <Logo />
+      </div>
+
+      <div className="flex flex-col gap-10 items-center w-full md:w-1/2 p-5">
+        <Intro />
+        <SignInButton loading={loading} onClick={handleSignUp} />
+      </div>
     </div>
   )
 }
