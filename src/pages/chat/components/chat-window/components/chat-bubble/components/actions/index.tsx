@@ -5,10 +5,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { ChevronIcon } from '@/assets/icons'
+import { ChevronIcon, PencilIcon, TrashIcon } from '@/assets/icons'
 import { Message } from '@/types'
 import { auth, db } from '@/firebase'
 import { MSG_DELETE_FOR_ME_TIMEOUT, MSG_EDIT_TIMEOUT } from '@/constants'
@@ -36,9 +37,6 @@ export default function Actions({
   content,
   senderID,
   timestamp,
-  deletedFor,
-  status,
-  edited,
   isLast,
 }: Props) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
@@ -61,37 +59,49 @@ export default function Actions({
     [senderID, timestamp]
   )
 
-  const updateLastMessage = (
-    data: Partial<Pick<Message, 'status' | 'edited' | 'deletedFor'>>
-  ) => {
-    if (isLast) {
-      updateDoc(doc(db, `chats/${chat?.id}`), {
-        lastMessage: {
-          content: newMessage,
-          timestamp,
-          status,
-          ...(edited ? { edited } : {}),
-          ...(deletedFor ? { deletedFor } : {}),
-          ...data,
-        },
-      })
+  const handleEditorOpen = (open: boolean) => {
+    if (!open) {
+      setNewMessage(content)
     }
+    setShowEditDialog(open)
   }
 
   const deleteMessageForMe = () => {
     updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
       deletedFor: arrayUnion(auth.currentUser?.uid),
     })
-    updateLastMessage({
-      deletedFor: [...(deletedFor ?? []), auth.currentUser?.uid ?? ''],
-    })
+
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        participantsMeta: chat?.participantsMeta?.map((participant) => {
+          if (participant.uid === auth.currentUser?.uid) {
+            return {
+              ...participant,
+              lastMessageContent: 'you deleted this message',
+            }
+          }
+          return participant
+        }),
+      })
+    }
   }
 
   const deleteMessageForEveryone = () => {
     updateDoc(doc(db, `chats/${chat?.id}/messages/${id}`), {
       status: MsgStatus.DELETED,
     })
-    updateLastMessage({ status: MsgStatus.DELETED })
+
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        participantsMeta: chat?.participantsMeta?.map((participant) => ({
+          ...participant,
+          lastMessageContent:
+            participant.uid === auth.currentUser?.uid
+              ? 'you deleted this message'
+              : 'this message was deleted',
+        })),
+      })
+    }
   }
 
   const editMessage = () => {
@@ -99,7 +109,16 @@ export default function Actions({
       content: newMessage,
       edited: true,
     })
-    updateLastMessage({ edited: true })
+
+    if (isLast) {
+      updateDoc(doc(db, `chats/${chat?.id}`), {
+        lastMessage: {
+          content: newMessage,
+          timestamp,
+        },
+      })
+    }
+
     setShowEditDialog(false)
   }
 
@@ -111,30 +130,40 @@ export default function Actions({
             variant="ghost"
             size="icon"
             id="action-trigger"
-            className="absolute top-1 right-1 h-auto w-auto rounded-full opacity-0 transition-opacity"
+            className="absolute top-1 right-1 h-auto w-auto rounded-full hover:bg-black/15 opacity-0 transition-all"
           >
-            <ChevronIcon />
+            <ChevronIcon className="text-gray-800 dark:text-gray-400" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {showEdit && (
             <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
               Edit
+              <DropdownMenuShortcut>
+                <PencilIcon />
+              </DropdownMenuShortcut>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => setShowDeleteAlert(true)}>
+          <DropdownMenuItem
+            className="text-red-500 focus:!text-red-500"
+            onClick={() => setShowDeleteAlert(true)}
+          >
             Delete
+            <DropdownMenuShortcut>
+              <TrashIcon />
+            </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <Dialog open={showEditDialog} onOpenChange={handleEditorOpen}>
         <DialogContent className="max-w-2xl w-[96%]">
           <DialogTitle>Edit message</DialogTitle>
           <Editor
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={editMessage}
+            editMessage
           />
         </DialogContent>
       </Dialog>

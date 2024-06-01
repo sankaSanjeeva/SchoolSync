@@ -3,7 +3,7 @@ import {
   FirestoreDataConverter,
   QueryDocumentSnapshot,
 } from 'firebase/firestore'
-import { ChatType, MsgStatus, Role } from '@/enums'
+import { MsgStatus, Role } from '@/enums'
 
 export type User = {
   uid: string
@@ -24,13 +24,35 @@ export const userConverter: FirestoreDataConverter<User> = {
   },
 }
 
+type PrivateChat = {
+  type: 'private'
+  name?: string
+}
+
+type GroupChat = {
+  type: 'group'
+  name: string
+}
+
+/**
+ * participant's meta data relevant to the chat
+ */
+type ParticipantsMeta = {
+  unreadCount: number
+  lastDeletedOn?: number
+  /**
+   * Participant specific last message.
+   * eg:- "You deleted the message"
+   */
+  lastMessageContent?: string
+} & Pick<User, 'uid'>
+
 export type Chat = {
   id: string
-  type: ChatType
   participants: User['uid'][]
-  participantsMeta: (Pick<User, 'uid'> & { unreadCount: number })[]
+  participantsMeta: ParticipantsMeta[]
   lastMessage: Partial<Message>
-}
+} & (PrivateChat | GroupChat)
 
 export const chatConverter: FirestoreDataConverter<Chat> = {
   toFirestore(chat: Chat): DocumentData {
@@ -45,7 +67,7 @@ export type Message = {
   id: string
   senderID: User['uid']
   content: string
-  type: 'text' | 'photo' | 'video' | 'document'
+  type: 'text' | 'photo' | 'video' | 'document' | 'info' | 'time'
   timestamp: number
   status: MsgStatus
   edited?: boolean

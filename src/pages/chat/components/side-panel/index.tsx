@@ -1,14 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SearchIcon, ThinArrowIcon } from '@/assets/icons'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  ChatItem,
-  ChatItemSkeleton,
-  SearchResult,
-  TopIcons,
-} from './components'
+import { ChatItem, ChatItemSkeleton } from '@/components/common'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tab } from '@/enums'
 import { useMediaQuery } from '@/hooks'
@@ -20,15 +16,26 @@ import {
 } from '@/components/ui/drawer'
 import { cn } from '@/lib/utils'
 import { useChat } from '@/contexts'
+import { SearchResult, TopIcons } from './components'
 
 interface ContentProps {
   isDesktop: boolean
 }
 
+function Skeleton() {
+  return (
+    <div className="h-[calc(100svh_-_176px)] overflow-hidden">
+      {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
+        <ChatItemSkeleton key={x} />
+      ))}
+    </div>
+  )
+}
+
 function Content({ isDesktop }: ContentProps) {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const { chats, loading } = useChat()
+  const { chats, loading, setChat } = useChat()
 
   const search = searchParams.get('search') ?? ''
 
@@ -45,13 +52,75 @@ function Content({ isDesktop }: ContentProps) {
     })
   }
 
+  const allChats = useMemo(
+    () => (
+      <AnimatePresence>
+        {chats?.map((chat) => (
+          <motion.div
+            key={chat.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            layout
+          >
+            <ChatItem key={chat.id} chat={chat} onClick={setChat} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    ),
+
+    [chats, setChat]
+  )
+
+  const privateChats = useMemo(
+    () => (
+      <AnimatePresence>
+        {chats
+          ?.filter((chat) => chat.type === 'private')
+          ?.map((chat) => (
+            <motion.div
+              key={chat.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              layout
+            >
+              <ChatItem key={chat.id} chat={chat} onClick={setChat} />
+            </motion.div>
+          ))}
+      </AnimatePresence>
+    ),
+    [chats, setChat]
+  )
+
+  const groupChats = useMemo(
+    () => (
+      <AnimatePresence>
+        {chats
+          ?.filter((chat) => chat.type === 'group')
+          ?.map((chat) => (
+            <motion.div
+              key={chat.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              layout
+            >
+              <ChatItem key={chat.id} chat={chat} onClick={setChat} />
+            </motion.div>
+          ))}
+      </AnimatePresence>
+    ),
+    [chats, setChat]
+  )
+
   return (
     <aside className={cn('flex-shrink-0', isDesktop ? 'w-[300px]' : 'w-full')}>
       <TopIcons />
 
       <div className="px-5">
         <Input
-          placeholder="Search or start new chat"
+          placeholder="Search or Start a new chat"
           variant="search"
           className="pl-8"
           startAdornment={<SearchIcon className="text-gray-400" />}
@@ -66,25 +135,23 @@ function Content({ isDesktop }: ContentProps) {
         ) : (
           <Tabs defaultValue={Tab.ALL}>
             <TabsList>
-              <TabsTrigger value={Tab.ALL}>ALL CHATS</TabsTrigger>
-              <TabsTrigger value={Tab.PRIVATE}>PRIVATE</TabsTrigger>
-              <TabsTrigger value={Tab.GROUP}>GROUP</TabsTrigger>
+              <TabsTrigger disabled={loading} value={Tab.ALL}>
+                ALL CHATS
+              </TabsTrigger>
+              <TabsTrigger disabled={loading} value={Tab.PRIVATE}>
+                PRIVATE
+              </TabsTrigger>
+              <TabsTrigger disabled={loading} value={Tab.GROUP}>
+                GROUP
+              </TabsTrigger>
             </TabsList>
-            <TabsContent value={Tab.ALL}>
-              {loading ? (
-                <div className="h-[calc(100vh_-_176px)] overflow-hidden">
-                  {Array.from({ length: 20 }, (_, i) => i + 1).map((x) => (
-                    <ChatItemSkeleton key={x} />
-                  ))}
-                </div>
-              ) : (
-                <ScrollArea className="h-[calc(100vh_-_176px)]">
-                  {chats?.map((chat) => <ChatItem key={chat.id} chat={chat} />)}
-                </ScrollArea>
-              )}
-            </TabsContent>
-            <TabsContent value={Tab.PRIVATE}>private</TabsContent>
-            <TabsContent value={Tab.GROUP}>group</TabsContent>
+            <ScrollArea className="h-[calc(100svh_-_176px)]">
+              <TabsContent value={Tab.ALL}>
+                {loading ? <Skeleton /> : allChats}
+              </TabsContent>
+              <TabsContent value={Tab.PRIVATE}>{privateChats}</TabsContent>
+              <TabsContent value={Tab.GROUP}>{groupChats}</TabsContent>
+            </ScrollArea>
           </Tabs>
         )}
       </div>

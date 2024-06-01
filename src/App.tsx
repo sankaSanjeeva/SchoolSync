@@ -1,8 +1,10 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
+import Logo from '@/assets/logo.svg?react'
 import { auth } from './firebase'
 import { Auth, Chat, Error } from './pages'
+import { FORCE_LOADING_TIMEOUT } from './constants'
 
 function ProtectedRoute({
   children,
@@ -16,6 +18,7 @@ function ProtectedRoute({
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isForceDelay, setIsForceDelay] = useState(true)
   const [loading, setLoading] = useState(true)
 
   const router = useMemo(
@@ -56,11 +59,22 @@ function App() {
       setLoading(false)
     })
 
-    return () => unsubscribe()
+    const timeout = setTimeout(() => {
+      setIsForceDelay(false)
+    }, FORCE_LOADING_TIMEOUT * 1000)
+
+    return () => {
+      unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [])
 
-  if (loading) {
-    return 'Loading...'
+  if (loading || isForceDelay) {
+    return (
+      <div className="h-svh flex justify-center items-center animate-pulse">
+        <Logo className="w-32 lg:w-36 xl:w-40" />
+      </div>
+    )
   }
 
   return <RouterProvider router={router} />

@@ -4,6 +4,7 @@ import { MsgStatus } from '@/enums'
 import { DoubleTickIcon } from '@/assets/icons'
 import { cn } from '@/lib/utils'
 import { auth } from '@/firebase'
+import { useChat } from '@/contexts'
 
 interface Props extends Message {
   isCurrentUser: boolean
@@ -13,7 +14,7 @@ interface Props extends Message {
 
 function DeleteBanner({ text }: { text: string }) {
   return (
-    <div className="col-start-2 rounded-lg px-2 pointer-events-none bg-gray-300 dark:bg-gray-900 transition-colors">
+    <div className="col-start-2 self-center rounded-lg px-2 pointer-events-none bg-gray-300 dark:bg-gray-900 transition-colors">
       <em className="opacity-50">{text}</em>
     </div>
   )
@@ -21,6 +22,8 @@ function DeleteBanner({ text }: { text: string }) {
 
 export default function MessageContent(props: Props) {
   const { className, content, status, deletedFor, isCurrentUser } = props
+
+  const { chat } = useChat()
 
   if (
     (status === MsgStatus.DELETED && isCurrentUser) ||
@@ -38,7 +41,7 @@ export default function MessageContent(props: Props) {
       className={cn(
         className,
         'relative rounded-lg p-3 [&:hover>#action-trigger]:opacity-100 bg-gray-300 dark:bg-gray-900 transition-colors',
-        !isCurrentUser && 'bg-[#005c4b] dark:bg-[#005c4b]'
+        isCurrentUser && 'bg-[#005c4b] dark:bg-[#005c4b]'
       )}
     >
       <Actions {...props} />
@@ -47,16 +50,16 @@ export default function MessageContent(props: Props) {
         className={cn(
           '[&_blockquote]:blockquote',
           '[&>*]:word-break text-black dark:text-gray-100',
-          !isCurrentUser && '!text-white [&_blockquote]:!bg-[#005040]'
+          isCurrentUser && 'text-white [&_blockquote]:!bg-[#005040]'
         )}
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: content }}
       />
 
-      {isCurrentUser && (
+      {isCurrentUser && chat?.type === 'private' && (
         <DoubleTickIcon
           className={cn(
-            'absolute bottom-0.5 right-1 transition-colors',
+            'absolute bottom-0.5 right-1 text-gray-400 transition-colors',
             status === MsgStatus.READ && 'text-theme'
           )}
         />

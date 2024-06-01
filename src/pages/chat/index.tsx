@@ -32,10 +32,6 @@ export default function Chat() {
     )
 
     return () => {
-      update(userRef, {
-        online: false,
-        lastOnline: +new Date(),
-      })
       unsubscribe()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

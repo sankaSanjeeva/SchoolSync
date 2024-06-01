@@ -10,11 +10,6 @@ export enum Tab {
   GROUP = 'group',
 }
 
-export enum ChatType {
-  PERSONAL = 'personal',
-  GROUP = 'group',
-}
-
 export enum MsgStatus {
   SENT = 'sent',
   DELIVERED = 'delivered',

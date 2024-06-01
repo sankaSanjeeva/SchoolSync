@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { signOut } from 'firebase/auth'
-import { auth } from '@/firebase'
 import {
   ChevronIcon,
   DarkModeIcon,
+  GroupIcon,
   LightModeIcon,
   LogoutIcon,
-  PencilIcon,
+  PenIcon,
+  PersonIcon,
   SystemModeIcon,
 } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
@@ -20,32 +20,40 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { useTheme } from '@/lib/theme'
+import { useTheme } from '@/contexts'
+import { CreteGroupChat, CretePrivateChat, SignOutAlert } from './components'
 
 export default function TopIcons() {
+  const [showCreatePrivateChat, setShowCreatePrivateChat] = useState(false)
+  const [showCreateGroupChat, setShowCreateGroupChat] = useState(false)
   const [showLogOutConfirmation, setShowLogOutConfirmation] = useState(false)
 
   const { setTheme } = useTheme()
 
-  const handleSignOut = () => {
-    signOut(auth)
-  }
-
   return (
     <div className="p-5 flex justify-end gap-1">
-      <Button variant="ghost" size="icon">
-        <PencilIcon />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <PenIcon />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>New Chat</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => setShowCreatePrivateChat(true)}>
+            Private
+            <DropdownMenuShortcut>
+              <PersonIcon />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowCreateGroupChat(true)}>
+            Group
+            <DropdownMenuShortcut>
+              <GroupIcon />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -91,26 +99,26 @@ export default function TopIcons() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog
-        open={showLogOutConfirmation}
-        onOpenChange={setShowLogOutConfirmation}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              After signing out of this account, you will need to sign in again
-              to access this page.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSignOut}>
-              Sign Out
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showCreatePrivateChat && (
+        <CretePrivateChat
+          open={showCreatePrivateChat}
+          onOpenChange={setShowCreatePrivateChat}
+        />
+      )}
+
+      {showCreateGroupChat && (
+        <CreteGroupChat
+          open={showCreateGroupChat}
+          onOpenChange={setShowCreateGroupChat}
+        />
+      )}
+
+      {showLogOutConfirmation && (
+        <SignOutAlert
+          open={showLogOutConfirmation}
+          onOpenChange={setShowLogOutConfirmation}
+        />
+      )}
     </div>
   )
 }

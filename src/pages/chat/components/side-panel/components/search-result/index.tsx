@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import ChatItem from '../chat-item'
+import { ChatItem } from '@/components/common'
 import { auth } from '@/firebase'
 import { useChat, useUser } from '@/contexts'
+import { Chat } from '@/types'
 
 export default function SearchResult() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -11,7 +12,7 @@ export default function SearchResult() {
   const search = searchParams.get('search') ?? ''
 
   const { users } = useUser()
-  const { chats } = useChat()
+  const { chats, setChat } = useChat()
 
   const filteredChats = useMemo(
     () =>
@@ -20,7 +21,7 @@ export default function SearchResult() {
           (participant) => participant !== auth.currentUser?.uid
         )
         return users
-          .find((user) => user.uid === uid)
+          ?.find((user) => user.uid === uid)
           ?.name?.toLowerCase()
           .includes(search.toLowerCase())
       }),
@@ -37,7 +38,7 @@ export default function SearchResult() {
 
   const usersWithNoChats = useMemo(
     () =>
-      users.filter(
+      users?.filter(
         (user) =>
           !conversances.includes(user.uid) && user.uid !== auth.currentUser?.uid
       ),
@@ -45,12 +46,13 @@ export default function SearchResult() {
   )
 
   const filteredUsersWithNoChat = useMemo(() => {
-    return usersWithNoChats.filter((user) =>
+    return usersWithNoChats?.filter((user) =>
       user.name.toLowerCase().includes(search.toLowerCase())
     )
   }, [usersWithNoChats, search])
 
-  const onSelectChat = () => {
+  const onSelectChat = (chat: Partial<Chat> | undefined) => {
+    setChat(chat)
     setSearchParams((params) => {
       params.delete('search')
       return params
@@ -58,14 +60,14 @@ export default function SearchResult() {
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh_-_132px)]">
+    <ScrollArea className="h-[calc(100svh_-_132px)]">
       <div>
         <div className="text-sm font-bold px-5 py-3 sticky top-0 z-10 bg-white dark:bg-gray-900 transition-colors">
           CHATS
         </div>
         <div>
           {filteredChats?.map((chat) => (
-            <ChatItem key={chat.id} chat={chat} onSelectChat={onSelectChat} />
+            <ChatItem key={chat.id} chat={chat} onClick={onSelectChat} />
           ))}
         </div>
       </div>
@@ -78,8 +80,8 @@ export default function SearchResult() {
           {filteredUsersWithNoChat?.map((user) => (
             <ChatItem
               key={user.uid}
-              chat={{ participants: [user.uid] }}
-              onSelectChat={onSelectChat}
+              chat={{ participants: [user.uid], type: 'private' }}
+              onClick={onSelectChat}
             />
           ))}
         </div>

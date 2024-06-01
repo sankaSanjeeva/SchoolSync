@@ -1,23 +1,21 @@
-import { useEffect, useMemo } from 'react'
-import { doc, updateDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase'
-import { cn, formateTime } from '@/lib/utils'
+import { useMemo } from 'react'
+import { format } from 'date-fns'
+import { auth } from '@/firebase'
+import { cn } from '@/lib/utils'
 import { Message } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ChatType, MsgStatus } from '@/enums'
-import { useElementIsVisible } from '@/hooks'
+import { MsgStatus } from '@/enums'
 import { useChat, useUser } from '@/contexts'
+import { PersonIcon } from '@/assets/icons'
 import { MessageContent } from './components'
 
 interface Props {
   message: Message
-  prevMsgSender: Message['senderID'] | undefined
+  prevMessage: Message | undefined
   isLast: boolean
 }
 
-export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
-  const { ref, visible } = useElementIsVisible()
-
+export default function ChatBubble({ message, prevMessage, isLast }: Props) {
   const { users } = useUser()
   const { chat } = useChat()
 
@@ -27,58 +25,34 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
   )
 
   const showConversantInfo = useMemo(
-    () => !isCurrentUser && chat?.type === ChatType.GROUP,
+    () => !isCurrentUser && chat?.type === 'group',
     [chat?.type, isCurrentUser]
   )
 
-  const isSameSender = useMemo(
-    () => message.senderID === prevMsgSender,
-    [message.senderID, prevMsgSender]
-  )
-
-  const isUnreadMessage = useMemo(
-    () => !isCurrentUser && message.status === MsgStatus.SENT,
-    [isCurrentUser, message.status]
+  const showNameAndAvatar = useMemo(
+    () =>
+      message.senderID !== prevMessage?.senderID ||
+      ['info', 'time'].includes(prevMessage.type),
+    [message.senderID, prevMessage?.senderID, prevMessage?.type]
   )
 
   const sender = useMemo(
-    () => users.find((user) => user.uid === message.senderID),
+    () => users?.find((user) => user.uid === message.senderID),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [message.senderID]
   )
 
-  const showEditedTag = useMemo(() => {
-    const isDeleted =
+  const isDeletedMessage = useMemo(
+    () =>
       message.status === MsgStatus.DELETED ||
-      message.deletedFor?.includes(auth.currentUser?.uid ?? '')
+      message.deletedFor?.includes(auth.currentUser?.uid ?? ''),
+    [message.deletedFor, message.status]
+  )
 
-    return !isDeleted && message.edited
-  }, [message.deletedFor, message.edited, message.status])
-
-  useEffect(() => {
-    if (visible) {
-      updateDoc(doc(db, `chats/${chat?.id}/messages/${message.id}`), {
-        status: MsgStatus.READ,
-      })
-
-      updateDoc(doc(db, `chats/${chat?.id}`), {
-        participantsMeta: chat?.participantsMeta?.map((participant) => {
-          if (participant.uid === auth.currentUser?.uid) {
-            return {
-              uid: participant.uid,
-              /**
-               * Increase by one not working
-               */
-              // unreadCount: participant.unreadCount - 1,
-              unreadCount: 0,
-            }
-          }
-          return participant
-        }),
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible])
+  const showEditedTag = useMemo(
+    () => !isDeletedMessage && message.edited,
+    [isDeletedMessage, message.edited]
+  )
 
   return (
     <div
@@ -87,16 +61,28 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
         isCurrentUser && 'mr-0 ml-auto'
       )}
     >
-      {showConversantInfo && !isSameSender && (
-        <div className="col-start-2 mb-1 px-3 font-medium text-xs text-gray-500">
+      {showConversantInfo && showNameAndAvatar && (
+        <div
+          className={cn(
+            'col-start-2  px-3 font-medium text-xs text-gray-500',
+            isDeletedMessage && !isCurrentUser ? '-mb-1' : 'mb-1'
+          )}
+        >
           {sender?.name}
         </div>
       )}
 
       {showConversantInfo && (
-        <Avatar className={cn('mr-3 w-12 h-12', isSameSender && 'invisible')}>
+        <Avatar
+          className={cn(
+            'mr-3 w-12 h-12 invisible',
+            showNameAndAvatar && 'visible'
+          )}
+        >
           <AvatarImage src={sender?.picture} />
-          <AvatarFallback>{sender?.name?.at(0)?.toUpperCase()}</AvatarFallback>
+          <AvatarFallback>
+            <PersonIcon className="h-7 w-7 text-gray-500" />
+          </AvatarFallback>
         </Avatar>
       )}
 
@@ -107,11 +93,16 @@ export default function ChatBubble({ message, prevMsgSender, isLast }: Props) {
         {...message}
       />
 
-      {isUnreadMessage && <div ref={ref} />}
-
-      <div className="col-start-2 flex justify-between gap-5 mt-1 px-3 font-medium text-xs text-gray-500">
+      <div
+        className={cn(
+          'col-start-2 flex justify-between gap-5 px-3 font-medium text-xs text-gray-500',
+          isDeletedMessage && !isCurrentUser && chat?.type === 'group'
+            ? '-mt-[6px]'
+            : 'mt-1'
+        )}
+      >
         <em>{showEditedTag && 'Edited'}</em>
-        <span>{formateTime(message.timestamp)}</span>
+        <span>{format(message.timestamp, 'p')}</span>
       </div>
     </div>
   )

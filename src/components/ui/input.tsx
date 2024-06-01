@@ -3,13 +3,13 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const inputVariants = cva(
-  'flex h-10 w-full text-sm px-3 py-2 placeholder:text-gray-400 dark:placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none',
+  'flex h-10 w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-800 placeholder:text-gray-400 dark:placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none',
   {
     variants: {
       variant: {
         default: '',
-        search: 'rounded-full bg-gray-200 dark:bg-black',
-        chat: 'rounded-full bg-white dark:bg-gray-900 shadow-lg',
+        search:
+          'rounded-full bg-gray-200 border-none dark:bg-black transition-colors',
       },
     },
     defaultVariants: {

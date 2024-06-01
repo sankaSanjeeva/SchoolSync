@@ -1,26 +1,33 @@
 import { useMemo } from 'react'
+import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { auth } from '@/firebase'
-import { cn, formateTime } from '@/lib/utils'
-import { Chat } from '@/types'
+import { cn } from '@/lib/utils'
+import { Chat, User } from '@/types'
 import { useChat, useUser } from '@/contexts'
-import { MsgStatus } from '@/enums'
+import { GroupIcon, PersonIcon } from '@/assets/icons'
 
 interface Props {
   chat: Partial<Chat> | undefined
-  onSelectChat?: () => void
+  className?: string
+  onClick?: (chat: Partial<Chat> | undefined) => void
 }
 
-export default function ChatItem({ chat, onSelectChat }: Props) {
+export default function ChatItem({ chat, className, onClick }: Props) {
   const { users } = useUser()
-  const { chat: selectedChat, setChat } = useChat()
+  const { chat: selectedChat } = useChat()
 
   const conversant = useMemo(() => {
+    if (chat?.type === 'group') {
+      return {
+        name: chat.name,
+      } as User
+    }
     const conversantId = chat?.participants?.find(
       (participant) => participant !== auth.currentUser?.uid
     )
-    return users.find((user) => user.uid === conversantId)
-  }, [chat?.participants, users])
+    return users?.find((user) => user.uid === conversantId)
+  }, [chat?.name, chat?.participants, chat?.type, users])
 
   const unreadCount = useMemo(
     () =>
@@ -31,44 +38,59 @@ export default function ChatItem({ chat, onSelectChat }: Props) {
   )
 
   const lastMessage = useMemo(() => {
-    if (
-      chat?.lastMessage?.status === MsgStatus.DELETED ||
-      chat?.lastMessage?.deletedFor?.includes(auth.currentUser?.uid ?? '')
-    ) {
-      return <em className="opacity-75">this message was deleted</em>
+    const message = chat?.participantsMeta?.find(
+      ({ uid }) => uid === auth.currentUser?.uid
+    )?.lastMessageContent
+
+    if (message) {
+      return <em className="opacity-75">{message}</em>
     }
 
     const element = document.createElement('div')
     element.innerHTML = chat?.lastMessage?.content ?? ''
 
     return <span>{element.textContent}</span>
-  }, [
-    chat?.lastMessage?.content,
-    chat?.lastMessage?.deletedFor,
-    chat?.lastMessage?.status,
-  ])
+  }, [chat?.lastMessage?.content, chat?.participantsMeta])
 
-  const handleClick = () => {
-    setChat(chat)
-    onSelectChat?.()
-  }
+  /**
+   * If unread message count blinks when send a new message, add below logic
+   */
+
+  // const batchElement = useRef<HTMLSpanElement>(null)
+
+  // useEffect(() => {
+  //   batchElement.current?.animate(
+  //     {
+  //       opacity: [0, 1],
+  //     },
+  //     500
+  //   )
+  // }, [unreadCount])
+
+  // <span ref={batchElement}>{unreadCount > 99 ? '99+' : unreadCount}</span>
 
   return (
     <button
       type="button"
       className={cn(
-        'p-[10px] pl-5 w-full text-left hover:bg-gray-200 dark:hover:bg-black transition-colors',
-        chat?.id === selectedChat?.id &&
-          'bg-gray-200 dark:bg-black transition-colors'
+        'p-[10px] pl-5 w-full text-left transition-all',
+        chat?.id &&
+          chat?.id === selectedChat?.id &&
+          'bg-gray-200 dark:bg-black',
+        className
       )}
-      onClick={handleClick}
+      onClick={() => onClick?.(chat)}
     >
       <div className="w-full grid grid-cols-[auto_1fr_auto_auto] grid-rows-2 gap-x-2 [&>*]:self-center">
         <div className="row-span-2">
           <Avatar active={conversant?.online}>
             <AvatarImage src={conversant?.picture} />
             <AvatarFallback>
-              {conversant?.name?.at(0)?.toUpperCase()}
+              {chat?.type === 'group' ? (
+                <GroupIcon className="h-8 w-8 text-gray-500" />
+              ) : (
+                <PersonIcon className="h-8 w-8 text-gray-500" />
+              )}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -86,7 +108,8 @@ export default function ChatItem({ chat, onSelectChat }: Props) {
         )}
 
         <span className="text-xs font-medium text-gray-500">
-          {formateTime(chat?.lastMessage?.timestamp)}
+          {chat?.lastMessage?.timestamp &&
+            format(chat.lastMessage.timestamp, 'p')}
         </span>
 
         <div

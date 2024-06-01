@@ -2,19 +2,21 @@ import { createContext, useContext, useMemo } from 'react'
 import { useListVals } from 'react-firebase-hooks/database'
 import { ref } from 'firebase/database'
 import { User } from '@/types'
-import { database } from '@/firebase'
+import { auth, database } from '@/firebase'
 
 type UserProviderProps = {
   children: React.ReactNode
 }
 
 type UserProviderState = {
-  users: User[]
+  user: User | undefined
+  users: User[] | undefined
   loading: boolean
 }
 
 const UserProviderContext = createContext<UserProviderState>({
-  users: [],
+  user: undefined,
+  users: undefined,
   loading: false,
 })
 
@@ -23,7 +25,8 @@ export function UserProvider({ children, ...props }: UserProviderProps) {
 
   const value = useMemo(
     () => ({
-      users: users ?? [],
+      user: users?.find(({ uid }) => uid === auth.currentUser?.uid),
+      users,
       loading,
     }),
     [loading, users]

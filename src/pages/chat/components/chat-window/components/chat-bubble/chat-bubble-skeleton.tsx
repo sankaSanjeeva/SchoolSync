@@ -1,9 +1,9 @@
 import { Skeleton, randomWidth } from '@/components/ui/skeleton'
-import { ChatType } from '@/enums'
 import { cn } from '@/lib/utils'
+import { Chat } from '@/types'
 
 interface Props {
-  type: ChatType | undefined
+  type: Chat['type'] | undefined
   isCurrentUser: boolean
 }
 
@@ -15,7 +15,7 @@ export default function ChatBubbleSkeleton({ type, isCurrentUser }: Props) {
         isCurrentUser && 'mr-0 ml-auto'
       )}
     >
-      {type === ChatType.GROUP && !isCurrentUser && (
+      {type === 'group' && !isCurrentUser && (
         <>
           <Skeleton
             className="col-start-2 mb-1 mx-3 h-4 max-w-40 bg-gray-300"

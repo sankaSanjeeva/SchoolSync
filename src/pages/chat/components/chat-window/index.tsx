@@ -1,11 +1,5 @@
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   collection,
   doc,
@@ -13,80 +7,75 @@ import {
   query,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore'
 import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { format, formatDistance, isToday, isValid, isYesterday } from 'date-fns'
+import {
+  differenceInCalendarDays,
+  format,
+  isToday,
+  isValid,
+  isYesterday,
+} from 'date-fns'
 import { auth, db } from '@/firebase'
-import { Chat, Message, chatConverter, messageConverter } from '@/types'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Message, messageConverter } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
-import { MoreIcon } from '@/assets/icons'
-import { ChatType, MsgStatus } from '@/enums'
-import { generateId } from '@/lib/utils'
-import { ChatBubble, Editor, NewMessageIndicator } from './components'
-import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
+import { generateId, sendMessage } from '@/pages/chat/utils'
+import { ChatWindowAlt } from '@/assets/background'
 import { useChat, useUser } from '@/contexts'
+import { MsgStatus } from '@/enums'
+import {
+  ChatBubble,
+  Editor,
+  Header,
+  InfoBanner,
+  MessageWrapper,
+  NewMessageIndicator,
+} from './components'
+import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
 
 export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
+  const [isChatInitiating, setIsChatInitiating] = useState(false)
 
   const dummyElement = useRef<HTMLDivElement>(null)
 
-  const { users } = useUser()
   const { chat, setChat } = useChat()
+  const { user } = useUser()
 
-  const q = useMemo(
-    () =>
-      query(
-        collection(db, `chats/${chat?.id}/messages`).withConverter(
-          messageConverter
-        ),
-        orderBy('timestamp', 'desc')
+  const q = useMemo(() => {
+    const lastDeletedOn =
+      chat?.participantsMeta?.find(({ uid }) => uid === auth.currentUser?.uid)
+        ?.lastDeletedOn ?? 0
+
+    return query(
+      collection(db, `chats/${chat?.id}/messages`).withConverter(
+        messageConverter
       ),
-    [chat?.id]
-  )
+      where('timestamp', '>', lastDeletedOn),
+      orderBy('timestamp', 'desc')
+    )
+  }, [chat?.id, chat?.participantsMeta])
 
   const [messages, loading] = useCollectionData(q)
 
-  const conversant = useMemo(() => {
-    const uid = chat?.participants?.find((u) => u !== auth.currentUser?.uid)
-    return users.find((user) => user.uid === uid)
-  }, [chat?.participants, users])
-
-  const sendMessage = (chatID: Chat['id'], senderID: Message['senderID']) => {
-    setNewMessage('')
-    const id = generateId()
-    return setDoc(
-      doc(db, `chats/${chatID}/messages/${id}`).withConverter(messageConverter),
-      {
-        id,
-        senderID,
-        content: newMessage,
-        type: 'text',
-        timestamp: +new Date(),
-        status: MsgStatus.SENT,
-      }
-    ).then(() => {
-      dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
-    })
-  }
-
   const handleClickSend = async () => {
-    const { currentUser } = auth
+    setNewMessage('')
 
-    if (!currentUser) {
+    if (!auth.currentUser) {
       throw new Error('currentUser is not defined')
     }
 
     if (!chat?.id) {
+      setIsChatInitiating(true)
+
       const id = generateId()
       const newChat = {
         id,
-        type: ChatType.PERSONAL,
+        type: chat?.type,
         participants: [
           ...(chat?.participants ?? []).map((participant) => participant),
-          currentUser.uid,
+          auth.currentUser.uid,
         ],
         participantsMeta: [
           ...(chat?.participants ?? []).map((participant) => ({
@@ -94,7 +83,7 @@ export default function ChatWindow() {
             unreadCount: 1,
           })),
           {
-            uid: currentUser?.uid,
+            uid: auth.currentUser.uid,
             unreadCount: 0,
           },
         ],
@@ -102,35 +91,69 @@ export default function ChatWindow() {
           content: newMessage,
           timestamp: +new Date(),
         },
+        ...(chat?.name ? { name: chat?.name } : {}),
       }
-      await setDoc(doc(db, `chats/${id}`).withConverter(chatConverter), newChat)
-      sendMessage(id, currentUser?.uid)
-      setChat(newChat)
-    } else {
-      sendMessage(chat.id, currentUser?.uid)
-      updateDoc(doc(db, `chats/${chat.id}`), {
-        lastMessage: {
-          content: newMessage,
+
+      await setDoc(doc(db, `chats/${id}`), newChat)
+      await sendMessage(id, [
+        {
+          content: `${user?.name} started the conversation`,
           timestamp: +new Date(),
+          type: 'info',
         },
-        participantsMeta: chat.participantsMeta?.map((participant) => {
-          if (participant.uid === currentUser.uid) {
-            return participant
-          }
-          return {
-            ...participant,
-            unreadCount: participant.unreadCount + 1,
-          }
-        }),
+        {
+          content: (+new Date()).toString(),
+          timestamp: +new Date() + 1,
+          type: 'time',
+        },
+        {
+          content: newMessage,
+          timestamp: +new Date() + 2,
+          status: MsgStatus.SENT,
+        },
+      ])
+
+      setIsChatInitiating(false)
+      setChat(newChat)
+
+      return
+    }
+
+    if (
+      differenceInCalendarDays(
+        new Date(),
+        messages?.[0]?.timestamp ?? new Date()
+      ) > 0
+    ) {
+      await sendMessage(chat.id, {
+        content: (+new Date()).toString(),
+        type: 'time',
+      }).then(() => {
+        dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
       })
     }
-  }
 
-  const showDateBanner = useCallback(
-    (currentDate: Message['timestamp'], previousDate: Message['timestamp']) =>
-      new Date(currentDate).getDate() !== new Date(previousDate).getDate(),
-    []
-  )
+    sendMessage(chat.id, { content: newMessage }).then(() => {
+      dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+    })
+
+    updateDoc(doc(db, `chats/${chat.id}`), {
+      lastMessage: {
+        content: newMessage,
+        timestamp: +new Date(),
+      },
+      participantsMeta: chat.participantsMeta?.map((participant) => {
+        const { lastMessageContent, ...rest } = participant
+        if (participant.uid === auth.currentUser?.uid) {
+          return rest
+        }
+        return {
+          ...rest,
+          unreadCount: participant.unreadCount + 1,
+        }
+      }),
+    })
+  }
 
   const dateBannerText = useCallback((date: Message['timestamp']) => {
     if (!isValid(date)) {
@@ -144,6 +167,35 @@ export default function ChatWindow() {
     }
     return format(new Date(date), 'MMMM do, yyyy')
   }, [])
+
+  const getMessageType = useCallback(
+    (message: Message, index: number) => {
+      switch (message.type) {
+        case 'text':
+          return (
+            <ChatBubble
+              message={message}
+              prevMessage={messages?.[index + 1]}
+              isLast={index === 0}
+            />
+          )
+
+        case 'info':
+          return <InfoBanner>{message.content}</InfoBanner>
+
+        case 'time':
+          return (
+            <InfoBanner>
+              ~ {dateBannerText(Number(message.content))} ~
+            </InfoBanner>
+          )
+
+        default:
+          return null
+      }
+    },
+    [dateBannerText, messages]
+  )
 
   const unreadCount = useMemo(
     () =>
@@ -162,31 +214,7 @@ export default function ChatWindow() {
     <main className="flex flex-grow overflow-hidden bg-gray-100 dark:bg-black transition-colors">
       {chat ? (
         <div className="flex flex-col w-full">
-          <header className="px-5 py-3 mx-0.5 grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-2 [&>*]:self-center shadow-lg dark:shadow-[0_5px_10px_0_black] z-10 bg-white dark:bg-gray-900 transition-colors">
-            <div className="row-span-2">
-              <Avatar active={conversant?.online}>
-                <AvatarImage src={conversant?.picture} />
-                <AvatarFallback>
-                  {conversant?.name?.at(0)?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <span>{conversant?.name}</span>
-            <Button variant="ghost" size="icon" className="row-span-2">
-              <MoreIcon />
-            </Button>
-            <span className="text-xs text-gray-400">
-              {conversant?.online
-                ? 'Online'
-                : formatDistance(
-                    conversant?.lastOnline ?? new Date(),
-                    new Date(),
-                    {
-                      addSuffix: true,
-                    }
-                  )}
-            </span>
-          </header>
+          <Header />
 
           <div className="flex-grow" />
 
@@ -194,35 +222,23 @@ export default function ChatWindow() {
             <div className="flex flex-col-reverse gap-3 pt-2">
               <div ref={dummyElement} />
 
-              {loading &&
+              {(loading || isChatInitiating) &&
                 [1, 2, 3].map((x) => (
                   <ChatBubbleSkeleton
                     type={chat.type}
                     key={x}
-                    isCurrentUser={Math.random() < 0.5}
+                    isCurrentUser={x % 2 > 0}
                   />
                 ))}
 
-              {messages?.map((message, i) => (
-                <Fragment key={message.id}>
-                  <ChatBubble
-                    message={message}
-                    prevMsgSender={messages[i + 1]?.senderID}
-                    isLast={i === 0}
-                  />
-                  {showDateBanner(
-                    message.timestamp,
-                    messages[i + 1]?.timestamp
-                  ) && (
-                    <div className="flex justify-center pointer-events-none">
-                      <div className="rounded-lg px-2 text-sm bg-gray-300 dark:bg-gray-900 transition-colors">
-                        <em className="opacity-50">
-                          ~ {dateBannerText(message.timestamp)} ~
-                        </em>
-                      </div>
-                    </div>
-                  )}
-                </Fragment>
+              {messages?.map((message, index) => (
+                <MessageWrapper
+                  key={message.id}
+                  message={message}
+                  isLast={index === 0}
+                >
+                  {getMessageType(message, index)}
+                </MessageWrapper>
               ))}
             </div>
           </ScrollArea>
@@ -240,11 +256,19 @@ export default function ChatWindow() {
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={handleClickSend}
-            className="p-2 pt-0"
+            className="px-2 -translate-y-2"
           />
         </div>
       ) : (
-        <div />
+        <motion.div
+          className="w-full flex justify-center items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ delay: 1, duration: 1 }}
+        >
+          <ChatWindowAlt className="w-3/4 h-full" />
+        </motion.div>
       )}
     </main>
   )
