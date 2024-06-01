@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   collection,
   doc,
@@ -20,6 +21,9 @@ import { auth, db } from '@/firebase'
 import { Message, messageConverter } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { generateId, sendMessage } from '@/pages/chat/utils'
+import { ChatWindowAlt } from '@/assets/background'
+import { useChat, useUser } from '@/contexts'
+import { MsgStatus } from '@/enums'
 import {
   ChatBubble,
   Editor,
@@ -29,8 +33,6 @@ import {
   NewMessageIndicator,
 } from './components'
 import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
-import { useChat, useUser } from '@/contexts'
-import { MsgStatus } from '@/enums'
 
 export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
@@ -258,7 +260,15 @@ export default function ChatWindow() {
           />
         </div>
       ) : (
-        <div />
+        <motion.div
+          className="w-full flex justify-center items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ delay: 1, duration: 1 }}
+        >
+          <ChatWindowAlt className="w-3/4 h-full" />
+        </motion.div>
       )}
     </main>
   )
