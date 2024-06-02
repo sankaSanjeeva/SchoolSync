@@ -22,7 +22,11 @@ export default function Actions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={!chat?.id && chat?.type === 'private'}
+          >
             <MoreIcon />
           </Button>
         </DropdownMenuTrigger>
