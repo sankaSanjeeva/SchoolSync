@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { differenceInMinutes } from 'date-fns'
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore'
+import ReactQuill from 'react-quill'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +43,8 @@ export default function Actions({
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [newMessage, setNewMessage] = useState(content)
+
+  const editor = useRef<ReactQuill>(null)
 
   const { chat } = useChat()
 
@@ -122,6 +125,14 @@ export default function Actions({
     setShowEditDialog(false)
   }
 
+  useEffect(() => {
+    if (showEditDialog) {
+      setTimeout(() => {
+        editor.current?.focus()
+      }, 0)
+    }
+  }, [showEditDialog])
+
   return (
     <>
       <DropdownMenu>
@@ -163,6 +174,7 @@ export default function Actions({
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={editMessage}
+            ref={editor}
             editMessage
           />
         </DialogContent>

@@ -17,6 +17,7 @@ import {
   isValid,
   isYesterday,
 } from 'date-fns'
+import ReactQuill from 'react-quill'
 import { auth, db } from '@/firebase'
 import { Message, messageConverter } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -38,6 +39,7 @@ export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
   const [isChatInitiating, setIsChatInitiating] = useState(false)
 
+  const editor = useRef<ReactQuill>(null)
   const dummyElement = useRef<HTMLDivElement>(null)
 
   const { chat, setChat } = useChat()
@@ -210,6 +212,10 @@ export default function ChatWindow() {
     }
   }, [loading])
 
+  useEffect(() => {
+    editor.current?.focus()
+  }, [chat?.id])
+
   return (
     <main className="flex flex-grow overflow-hidden bg-gray-100 dark:bg-black transition-colors">
       {chat ? (
@@ -257,6 +263,7 @@ export default function ChatWindow() {
             onChange={setNewMessage}
             onSubmit={handleClickSend}
             className="px-2 -translate-y-2"
+            ref={editor}
           />
         </div>
       ) : (
