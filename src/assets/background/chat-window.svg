@@ -1,10 +1,10 @@
 <svg width="440" height="440" viewBox="0 0 440 440" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="8" y="73" width="344" height="295" rx="4" stroke="#131313" stroke-width="2"/>
-<rect x="85" y="111" width="348" height="160" rx="10" fill="#242424"/>
-<path d="M160 215L246 215" stroke="#727272" stroke-width="8" stroke-linecap="round"/>
-<path d="M160 191L358 191" stroke="#727272" stroke-width="8" stroke-linecap="round"/>
-<path d="M160 167L358 167" stroke="#727272" stroke-width="8" stroke-linecap="round"/>
-<path d="M123 307L321 307" stroke="#727272" stroke-width="8" stroke-linecap="round"/>
-<path d="M123 331H208" stroke="#242424" stroke-width="8" stroke-linecap="round"/>
-<circle cx="65" cy="319" r="25" fill="#242424"/>
+<rect x="8" y="73" width="344" height="295" rx="4" stroke="#E8ECEF" stroke-width="2"/>
+<rect x="85" y="111" width="348" height="160" rx="10" id="fill-gray-300" fill="#E8ECEF" />
+<path d="M160 215L246 215" id="gray-400" stroke="#A9A9A9" stroke-width="8" stroke-linecap="round"/>
+<path d="M160 191L358 191" id="gray-400" stroke="#A9A9A9" stroke-width="8" stroke-linecap="round"/>
+<path d="M160 167L358 167" id="gray-400" stroke="#A9A9A9" stroke-width="8" stroke-linecap="round"/>
+<path d="M123 307L321 307" id="gray-400" stroke="#A9A9A9" stroke-width="8" stroke-linecap="round"/>
+<path d="M123 331H208" id="stroke-gray-300" stroke="#E8ECEF"  stroke-width="8" stroke-linecap="round"/>
+<circle cx="65" cy="319" r="25" id="fill-gray-300" fill="#E8ECEF" />
 </svg>

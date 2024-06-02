@@ -267,7 +267,7 @@ export default function ChatWindow() {
           exit={{ opacity: 0 }}
           transition={{ delay: 1, duration: 1 }}
         >
-          <ChatWindowAlt className="w-3/4 h-full" />
+          <ChatWindowAlt className="w-3/4 h-full dark:[&>:first-child]:stroke-gray-900 dark:[&>#fill-gray-300]:fill-gray-800 dark:[&>#stroke-gray-300]:stroke-gray-800 dark:[&>#gray-400]:stroke-gray-500" />
         </motion.div>
       )}
     </main>
