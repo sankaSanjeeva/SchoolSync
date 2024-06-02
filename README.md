@@ -1,30 +1,33 @@
-# React + TypeScript + Vite
+# [SchoolSync](https://schoolsync-f5081.web.app)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Join School Sync today and take your communication to the next level. Sign up now to start connecting with your peers, classmates, or teachers effortlessly. Let School Sync be your go-to platform for all your educational communication needs.
 
-Currently, two official plugins are available:
+## Completed Feature
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Authentication (sign up with google)
+- Theme (dark, light and system)
+- User's online status
+- Initiate chats (personal and group)
+- Text messages (both persona and group)
+  - Send and received messages
+  - See messages status (seen or not)
+  - Delete messages (delete for me and delete for every one option)
+  - Edit messages
+  - Delete chat (clear messages history)
 
-## Expanding the ESLint configuration
+## Pending Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- Media messages
+  - Images
+  - Videos
+  - Documents
 
-- Configure the top-level `parserOptions` property like this:
+## Technologies
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+|            component | technology  |
+| -------------------: | ----------- |
+|             Frontend | React       |
+|              backend | Firebase    |
+|   Development server | Vite        |
+| Programming language | TypeScript  |
+|     State management | Context API |
