@@ -262,7 +262,7 @@ export default function ChatWindow() {
             value={newMessage}
             onChange={setNewMessage}
             onSubmit={handleClickSend}
-            className="px-2 -translate-y-2"
+            className="mx-2 rounded-3xl -translate-y-2"
             ref={editor}
           />
         </div>

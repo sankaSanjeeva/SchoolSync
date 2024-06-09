@@ -1,9 +1,10 @@
-import { forwardRef, useEffect, useMemo, useRef } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import ReactQuill, { ReactQuillProps } from 'react-quill'
 import { PaperclipIcon, SendIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import { useMediaQuery } from '@/hooks'
 import { cn } from '@/lib/utils'
+import { FilesPreviewer } from './components'
 import 'react-quill/dist/quill.snow.css'
 
 interface Props extends ReactQuillProps {
@@ -16,6 +17,8 @@ const Editor = forwardRef<ReactQuill, Props>(
   ({ onSubmit, className, editMessage = false, ...rest }, ref) => {
     const editorHint = useRef<HTMLSpanElement>(null)
 
+    const [files, setFiles] = useState<File[]>([])
+
     const isDesktop = useMediaQuery('(min-width: 768px)')
 
     const hasTextContent = useMemo(() => {
@@ -23,6 +26,21 @@ const Editor = forwardRef<ReactQuill, Props>(
       element.innerHTML = `${rest.value ?? ''}`
       return !!element.textContent
     }, [rest.value])
+
+    const selectFile = () => {
+      const input = document.createElement('input')
+      input.type = 'file'
+      // input.accept = 'image/*'
+      input.multiple = true
+      input.onchange = () => {
+        setFiles((prev) => [...prev, ...input.files!])
+      }
+      input.click()
+    }
+
+    const onRemoveFile = (file: File) => {
+      setFiles((prev) => prev.filter((f) => f !== file))
+    }
 
     useEffect(() => {
       editorHint.current?.animate(
@@ -36,7 +54,8 @@ const Editor = forwardRef<ReactQuill, Props>(
     return (
       <div
         className={cn(
-          'relative [&_.ql-toolbar]:border-none [&_.ql-container]:border-none [&_.ql-container]:text-base [&_.ql-container]:max-h-[calc(100svh_-_144px)] [&_.ql-container]:overflow-auto',
+          'relative bg-white dark:bg-gray-900 shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black]',
+          editMessage && 'shadow-none dark:shadow-none',
           className
         )}
         onKeyDownCapture={(e) => {
@@ -54,15 +73,13 @@ const Editor = forwardRef<ReactQuill, Props>(
               ['clean'],
             ],
           }}
-          className={cn(
-            'rounded-3xl shadow-[0_0_10px_0_#0000001a] dark:shadow-[0_0_10px_0_black] bg-white dark:bg-gray-900 [&_.ql-editor]:p-[0px_40px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote transition-all',
-            editMessage && 'shadow-none dark:shadow-none'
-          )}
+          className="[&_.ql-toolbar]:border-none [&_.ql-container]:border-none [&_.ql-container]:text-base [&_.ql-container]:max-h-[calc(100svh_-_144px)] [&_.ql-container]:overflow-auto [&_.ql-editor]:p-[0px_44px_8px_16px] [&_.ql-editor>*]:word-break [&_.ql-editor.ql-blank::before]:text-gray-500 [&_blockquote]:blockquote transition-all"
           placeholder="Type here"
           theme="snow"
           ref={ref}
           {...rest}
         />
+
         {hasTextContent || editMessage ? (
           <Button
             size="icon"
@@ -78,10 +95,12 @@ const Editor = forwardRef<ReactQuill, Props>(
             size="icon"
             variant="ghost"
             className="rounded-full absolute right-2 top-1/2 -translate-y-1/2"
+            onClick={selectFile}
           >
             <PaperclipIcon className="text-gray-500" />
           </Button>
         )}
+
         {hasTextContent && isDesktop && (
           <span
             className="absolute top-1 right-14 text-xs opacity-40"
@@ -90,6 +109,8 @@ const Editor = forwardRef<ReactQuill, Props>(
             Shift + Enter to add a new line
           </span>
         )}
+
+        <FilesPreviewer files={files} onRemoveFile={onRemoveFile} />
       </div>
     )
   }
