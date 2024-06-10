@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import ReactQuill, { ReactQuillProps } from 'react-quill'
-import { PaperclipIcon, SendIcon } from '@/assets/icons'
+import { PlusIcon, SendIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
 import { useMediaQuery } from '@/hooks'
 import { cn } from '@/lib/utils'
@@ -80,27 +80,6 @@ const Editor = forwardRef<ReactQuill, Props>(
           {...rest}
         />
 
-        {hasTextContent || editMessage ? (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full absolute right-2 top-1/2 -translate-y-1/2"
-            onClick={onSubmit}
-            disabled={!hasTextContent}
-          >
-            <SendIcon className="text-gray-500" />
-          </Button>
-        ) : (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full absolute right-2 top-1/2 -translate-y-1/2"
-            onClick={selectFile}
-          >
-            <PaperclipIcon className="text-gray-500" />
-          </Button>
-        )}
-
         {hasTextContent && isDesktop && (
           <span
             className="absolute top-1 right-14 text-xs opacity-40"
@@ -109,6 +88,25 @@ const Editor = forwardRef<ReactQuill, Props>(
             Shift + Enter to add a new line
           </span>
         )}
+
+        {!editMessage && (
+          <Button
+            variant="ghost"
+            className="p-0 w-9 h-9 rounded-full absolute right-1 top-1"
+            onClick={selectFile}
+          >
+            <PlusIcon className="text-gray-500" />
+          </Button>
+        )}
+
+        <Button
+          variant="ghost"
+          className="p-0 w-9 h-9 rounded-full absolute right-1 bottom-1"
+          onClick={onSubmit}
+          disabled={!(hasTextContent || files.length > 0)}
+        >
+          <SendIcon className="text-gray-500" />
+        </Button>
 
         <FilesPreviewer files={files} onRemoveFile={onRemoveFile} />
       </div>
