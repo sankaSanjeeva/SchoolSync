@@ -17,6 +17,7 @@ import {
   isValid,
   isYesterday,
 } from 'date-fns'
+import { useDropzone } from 'react-dropzone'
 import ReactQuill from 'react-quill'
 import { auth, db } from '@/firebase'
 import { Message, messageConverter } from '@/types'
@@ -25,6 +26,7 @@ import { generateId, sendMessage } from '@/pages/chat/utils'
 import { ChatWindowAlt } from '@/assets/background'
 import { useChat, useUser } from '@/contexts'
 import { MsgStatus } from '@/enums'
+import { cn } from '@/lib/utils'
 import {
   ChatBubble,
   Editor,
@@ -37,6 +39,7 @@ import ChatBubbleSkeleton from './components/chat-bubble/chat-bubble-skeleton'
 
 export default function ChatWindow() {
   const [newMessage, setNewMessage] = useState('')
+  const [files, setFiles] = useState<File[]>([])
   const [isChatInitiating, setIsChatInitiating] = useState(false)
 
   const editor = useRef<ReactQuill>(null)
@@ -44,6 +47,12 @@ export default function ChatWindow() {
 
   const { chat, setChat } = useChat()
   const { user } = useUser()
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setFiles((prev) => [...prev, ...acceptedFiles])
+  }, [])
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
   const q = useMemo(() => {
     const lastDeletedOn =
@@ -222,49 +231,64 @@ export default function ChatWindow() {
         <div className="flex flex-col w-full">
           <Header />
 
-          <div className="flex-grow" />
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <div
+            className={cn(
+              'flex-grow flex flex-col relative overflow-hidden',
+              'after:absolute after:flex after:justify-center after:items-center after:opacity-0 after:bg-white/75 dark:after:bg-black/75 after:transition-opacity',
+              isDragActive &&
+                'after:content-["Drop_your_files_here"] after:w-full after:h-full after:opacity-100'
+            )}
+            {...getRootProps()}
+            onClick={() => {}}
+          >
+            <input {...getInputProps()} />
+            <div className="flex-grow" />
 
-          <ScrollArea>
-            <div className="flex flex-col-reverse gap-3 pt-2">
-              <div ref={dummyElement} />
+            <ScrollArea>
+              <div className="flex flex-col-reverse gap-3 pt-2">
+                <div ref={dummyElement} />
 
-              {(loading || isChatInitiating) &&
-                [1, 2, 3].map((x) => (
-                  <ChatBubbleSkeleton
-                    type={chat.type}
-                    key={x}
-                    isCurrentUser={x % 2 > 0}
-                  />
+                {(loading || isChatInitiating) &&
+                  [1, 2, 3].map((x) => (
+                    <ChatBubbleSkeleton
+                      type={chat.type}
+                      key={x}
+                      isCurrentUser={x % 2 > 0}
+                    />
+                  ))}
+
+                {messages?.map((message, index) => (
+                  <MessageWrapper
+                    key={message.id}
+                    message={message}
+                    isLast={index === 0}
+                  >
+                    {getMessageType(message, index)}
+                  </MessageWrapper>
                 ))}
+              </div>
+            </ScrollArea>
 
-              {messages?.map((message, index) => (
-                <MessageWrapper
-                  key={message.id}
-                  message={message}
-                  isLast={index === 0}
-                >
-                  {getMessageType(message, index)}
-                </MessageWrapper>
-              ))}
-            </div>
-          </ScrollArea>
+            {unreadCount > 0 && !loading && (
+              <NewMessageIndicator
+                messageCount={unreadCount}
+                onClick={() => {
+                  dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              />
+            )}
 
-          {unreadCount > 0 && !loading && (
-            <NewMessageIndicator
-              messageCount={unreadCount}
-              onClick={() => {
-                dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
-              }}
+            <Editor
+              value={newMessage}
+              onChange={setNewMessage}
+              onSubmit={handleClickSend}
+              files={files}
+              setFiles={setFiles}
+              className="mx-2 rounded-3xl -translate-y-2"
+              ref={editor}
             />
-          )}
-
-          <Editor
-            value={newMessage}
-            onChange={setNewMessage}
-            onSubmit={handleClickSend}
-            className="mx-2 rounded-3xl -translate-y-2"
-            ref={editor}
-          />
+          </div>
         </div>
       ) : (
         <motion.div

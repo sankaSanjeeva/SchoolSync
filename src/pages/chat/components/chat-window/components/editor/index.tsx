@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { Dispatch, forwardRef, useEffect, useMemo, useRef } from 'react'
 import ReactQuill, { ReactQuillProps } from 'react-quill'
 import { PlusIcon, SendIcon } from '@/assets/icons'
 import { Button } from '@/components/ui/button'
@@ -9,15 +9,18 @@ import 'react-quill/dist/quill.snow.css'
 
 interface Props extends ReactQuillProps {
   onSubmit: () => void
+  files?: File[]
+  setFiles?: Dispatch<React.SetStateAction<File[]>>
   className?: string
   editMessage?: boolean
 }
 
 const Editor = forwardRef<ReactQuill, Props>(
-  ({ onSubmit, className, editMessage = false, ...rest }, ref) => {
+  (
+    { onSubmit, files, setFiles, className, editMessage = false, ...rest },
+    ref
+  ) => {
     const editorHint = useRef<HTMLSpanElement>(null)
-
-    const [files, setFiles] = useState<File[]>([])
 
     const isDesktop = useMediaQuery('(min-width: 768px)')
 
@@ -33,13 +36,13 @@ const Editor = forwardRef<ReactQuill, Props>(
       // input.accept = 'image/*'
       input.multiple = true
       input.onchange = () => {
-        setFiles((prev) => [...prev, ...input.files!])
+        setFiles?.((prev) => [...prev, ...input.files!])
       }
       input.click()
     }
 
     const onRemoveFile = (file: File) => {
-      setFiles((prev) => prev.filter((f) => f !== file))
+      setFiles?.((prev) => prev.filter((f) => f !== file))
     }
 
     useEffect(() => {
@@ -103,12 +106,12 @@ const Editor = forwardRef<ReactQuill, Props>(
           variant="ghost"
           className="p-0 w-9 h-9 rounded-full absolute right-1 bottom-1"
           onClick={onSubmit}
-          disabled={!(hasTextContent || files.length > 0)}
+          disabled={!(hasTextContent || files?.length)}
         >
           <SendIcon className="text-gray-500" />
         </Button>
 
-        <FilesPreviewer files={files} onRemoveFile={onRemoveFile} />
+        {files && <FilesPreviewer files={files} onRemoveFile={onRemoveFile} />}
       </div>
     )
   }
