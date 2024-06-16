@@ -20,11 +20,11 @@ import {
 import { useDropzone } from 'react-dropzone'
 import ReactQuill from 'react-quill'
 import { auth, db } from '@/firebase'
-import { Message, messageConverter } from '@/types'
+import { Chat, Message, messageConverter } from '@/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { generateId, sendMessage } from '@/pages/chat/utils'
 import { ChatWindowAlt } from '@/assets/background'
-import { useChat, useUser } from '@/contexts'
+import { useChat, useFileUpload, useUser } from '@/contexts'
 import { MsgStatus } from '@/enums'
 import { cn } from '@/lib/utils'
 import {
@@ -47,6 +47,7 @@ export default function ChatWindow() {
 
   const { chat, setChat } = useChat()
   const { user } = useUser()
+  const { files: filesToUpload, setFiles: setFileToUpload } = useFileUpload()
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prev) => [...prev, ...acceptedFiles])
@@ -70,8 +71,22 @@ export default function ChatWindow() {
 
   const [messages, loading] = useCollectionData(q)
 
+  const moveFilesToUpload = (chatId: Chat['id'], messageId: Message['id']) => {
+    setFileToUpload([
+      ...filesToUpload,
+      ...files.map((file, i) => ({
+        fileName: `${chatId}-${messageId}-${i}`,
+        uploading: false,
+        file,
+      })),
+    ])
+  }
+
   const handleClickSend = async () => {
+    const messageId = generateId()
+
     setNewMessage('')
+    setFiles([])
 
     if (!auth.currentUser) {
       throw new Error('currentUser is not defined')
@@ -80,9 +95,9 @@ export default function ChatWindow() {
     if (!chat?.id) {
       setIsChatInitiating(true)
 
-      const id = generateId()
+      const chatId = generateId()
       const newChat = {
-        id,
+        id: chatId,
         type: chat?.type,
         participants: [
           ...(chat?.participants ?? []).map((participant) => participant),
@@ -105,8 +120,8 @@ export default function ChatWindow() {
         ...(chat?.name ? { name: chat?.name } : {}),
       }
 
-      await setDoc(doc(db, `chats/${id}`), newChat)
-      await sendMessage(id, [
+      await setDoc(doc(db, `chats/${chatId}`), newChat)
+      await sendMessage(chatId, [
         {
           content: `${user?.name} started the conversation`,
           timestamp: +new Date(),
@@ -118,11 +133,26 @@ export default function ChatWindow() {
           type: 'time',
         },
         {
+          id: messageId,
           content: newMessage,
           timestamp: +new Date() + 2,
           status: MsgStatus.SENT,
+          attachments: files.map((f, i) => ({
+            id: `${chatId}-${messageId}-${i}`,
+            // eslint-disable-next-line no-nested-ternary
+            type: f.type.startsWith('image')
+              ? 'image'
+              : // eslint-disable-next-line no-nested-ternary
+                f.type.startsWith('video')
+                ? 'video'
+                : f.type.startsWith('application/pdf')
+                  ? 'pdf'
+                  : 'other',
+          })),
         },
       ])
+
+      moveFilesToUpload(chatId, messageId)
 
       setIsChatInitiating(false)
       setChat(newChat)
@@ -144,8 +174,24 @@ export default function ChatWindow() {
       })
     }
 
-    sendMessage(chat.id, { content: newMessage }).then(() => {
+    sendMessage(chat.id, {
+      id: messageId,
+      content: newMessage,
+      attachments: files.map((f, i) => ({
+        id: `${chat.id}-${messageId}-${i}`,
+        // eslint-disable-next-line no-nested-ternary
+        type: f.type.startsWith('image')
+          ? 'image'
+          : // eslint-disable-next-line no-nested-ternary
+            f.type.startsWith('video')
+            ? 'video'
+            : f.type.startsWith('application/pdf')
+              ? 'pdf'
+              : 'other',
+      })),
+    }).then(() => {
       dummyElement.current?.scrollIntoView({ behavior: 'smooth' })
+      moveFilesToUpload(chat.id!, messageId)
     })
 
     updateDoc(doc(db, `chats/${chat.id}`), {
