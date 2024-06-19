@@ -23,7 +23,7 @@ export const sendMessage = (
     const batch = writeBatch(db)
 
     messages.forEach((message) => {
-      const id = generateId()
+      const id = message.id ?? generateId()
 
       batch.set(
         doc(db, `chats/${chatId}/messages/${id}`).withConverter(converter),
@@ -39,7 +39,7 @@ export const sendMessage = (
     return batch.commit()
   }
 
-  const id = generateId()
+  const id = messages.id ?? generateId()
 
   return setDoc(
     doc(db, `chats/${chatId}/messages/${id}`).withConverter(converter),

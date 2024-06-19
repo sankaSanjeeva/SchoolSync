@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { onDisconnect, onValue, ref, update } from 'firebase/database'
 import { ChatWindow, SidePanel } from './components'
 import { auth, database } from '@/firebase'
-import { ChatProvider, UserProvider } from '@/contexts'
+import { ChatProvider, FileUploadProvider, UserProvider } from '@/contexts'
 
 export default function Chat() {
   const uid = auth.currentUser?.uid
@@ -42,7 +42,9 @@ export default function Chat() {
       <ChatProvider>
         <div className="flex max-w-screen-lg mx-auto h-svh">
           <SidePanel />
-          <ChatWindow />
+          <FileUploadProvider>
+            <ChatWindow />
+          </FileUploadProvider>
         </div>
       </ChatProvider>
     </UserProvider>

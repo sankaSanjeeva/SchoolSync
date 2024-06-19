@@ -5,6 +5,7 @@ import { DoubleTickIcon } from '@/assets/icons'
 import { cn } from '@/lib/utils'
 import { auth } from '@/firebase'
 import { useChat } from '@/contexts'
+import FilePreview from '../file-preview'
 
 interface Props extends Message {
   isCurrentUser: boolean
@@ -21,7 +22,8 @@ function DeleteBanner({ text }: { text: string }) {
 }
 
 export default function MessageContent(props: Props) {
-  const { className, content, status, deletedFor, isCurrentUser } = props
+  const { className, content, status, deletedFor, attachments, isCurrentUser } =
+    props
 
   const { chat } = useChat()
 
@@ -55,6 +57,22 @@ export default function MessageContent(props: Props) {
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: content }}
       />
+
+      <div
+        className={cn(
+          attachments && attachments?.length > 1 && 'grid grid-cols-2 gap-2'
+        )}
+      >
+        {attachments?.slice(0, 4)?.map((attachment, i) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <FilePreview key={i} attachment={attachment} />
+        ))}
+        {attachments && attachments?.length > 4 && (
+          <div className="absolute bottom-3 right-3 w-40 h-40 flex justify-center items-center bg-black/50">
+            + {attachments.length - 3} items
+          </div>
+        )}
+      </div>
 
       {isCurrentUser && chat?.type === 'private' && (
         <DoubleTickIcon

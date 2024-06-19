@@ -63,15 +63,22 @@ export const chatConverter: FirestoreDataConverter<Chat> = {
   },
 }
 
+export type Attachment = {
+  id: string
+  type: 'image' | 'video' | 'pdf' | 'other'
+  downloadURL?: string
+}
+
 export type Message = {
   id: string
   senderID: User['uid']
   content: string
-  type: 'text' | 'photo' | 'video' | 'document' | 'info' | 'time'
+  type: 'text' | 'info' | 'time'
   timestamp: number
   status: MsgStatus
   edited?: boolean
   deletedFor?: Chat['participants']
+  attachments?: Attachment[]
 }
 
 export const messageConverter: FirestoreDataConverter<Message> = {
