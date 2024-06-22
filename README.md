@@ -4,7 +4,7 @@ Join School Sync today and take your communication to the next level. Sign up no
 
 ## Flow Chart
 
-<img src="https://raw.githubusercontent.com/sankaSanjeeva/SchoolSync/develop/flowchart.png" />
+<img src="https://raw.githubusercontent.com/sankaSanjeeva/SchoolSync/develop/docs/flowchart.png" />
 
 ## Completed Feature
 
