@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
-  ChevronIcon,
   DarkModeIcon,
   GroupIcon,
   LightModeIcon,
@@ -16,7 +15,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -28,7 +26,7 @@ export default function TopIcons() {
   const [showCreatePrivateChat, setShowCreatePrivateChat] = useState(false)
   const [showLogOutConfirmation, setShowLogOutConfirmation] = useState(false)
 
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { chat, chats } = useChat()
 
   const showPingAnimation = useMemo(
@@ -46,6 +44,17 @@ export default function TopIcons() {
       showLogOutConfirmation,
     ]
   )
+
+  const getThemeIcon = useCallback(() => {
+    switch (theme) {
+      case 'light':
+        return <LightModeIcon />
+      case 'dark':
+        return <DarkModeIcon />
+      default:
+        return <SystemModeIcon />
+    }
+  }, [theme])
 
   return (
     <div className="p-5 flex justify-end gap-1">
@@ -82,7 +91,7 @@ export default function TopIcons() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <ChevronIcon />
+            {getThemeIcon()}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -107,21 +116,18 @@ export default function TopIcons() {
               </DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            onClick={() => {
-              setShowLogOutConfirmation(true)
-            }}
-          >
-            Log out
-            <DropdownMenuShortcut>
-              <LogoutIcon />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          setShowLogOutConfirmation(true)
+        }}
+      >
+        <LogoutIcon />
+      </Button>
 
       {showCreatePrivateChat && (
         <CretePrivateChat
