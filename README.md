@@ -2,6 +2,10 @@
 
 Join School Sync today and take your communication to the next level. Sign up now to start connecting with your peers, classmates, or teachers effortlessly. Let School Sync be your go-to platform for all your educational communication needs.
 
+## Flow Chart
+
+<img src="https://raw.githubusercontent.com/sankaSanjeeva/SchoolSync/develop/flowchart.png" />
+
 ## Completed Feature
 
 - Authentication (sign up with google)
