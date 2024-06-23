@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Message } from '@/types'
 import Actions from '../actions'
 import { MsgStatus } from '@/enums'
@@ -6,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { auth } from '@/firebase'
 import { useChat } from '@/contexts'
 import FilePreview from '../file-preview'
+import FilePreviewDialog from '../../../file-preview-dialog'
 
 interface Props extends Message {
   isCurrentUser: boolean
@@ -25,6 +27,8 @@ export default function MessageContent(props: Props) {
   const { className, content, status, deletedFor, attachments, isCurrentUser } =
     props
 
+  const [openFilePreview, setOpenFilePreview] = useState(false)
+
   const { chat } = useChat()
 
   if (
@@ -36,6 +40,10 @@ export default function MessageContent(props: Props) {
 
   if (status === MsgStatus.DELETED && !isCurrentUser) {
     return <DeleteBanner text="this message was deleted" />
+  }
+
+  const handleClick = () => {
+    setOpenFilePreview(true)
   }
 
   return (
@@ -58,21 +66,28 @@ export default function MessageContent(props: Props) {
         dangerouslySetInnerHTML={{ __html: content }}
       />
 
-      <div
+      <button
+        type="button"
         className={cn(
-          attachments && attachments?.length > 1 && 'grid grid-cols-2 gap-2'
+          attachments && attachments?.length > 1
+            ? 'grid grid-cols-2 gap-2'
+            : 'flex'
         )}
+        onClick={handleClick}
       >
         {attachments?.slice(0, 4)?.map((attachment, i) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <FilePreview key={i} attachment={attachment} />
+          <FilePreview
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            attachment={attachment}
+          />
         ))}
         {attachments && attachments?.length > 4 && (
           <div className="absolute bottom-3 right-3 w-40 h-40 flex justify-center items-center bg-black/50">
             + {attachments.length - 3} items
           </div>
         )}
-      </div>
+      </button>
 
       {isCurrentUser && chat?.type === 'private' && (
         <DoubleTickIcon
@@ -80,6 +95,14 @@ export default function MessageContent(props: Props) {
             'absolute bottom-0.5 right-1 text-gray-400 transition-colors',
             status === MsgStatus.READ && 'text-theme'
           )}
+        />
+      )}
+
+      {openFilePreview && attachments && (
+        <FilePreviewDialog
+          open
+          onOpenChange={setOpenFilePreview}
+          attachments={attachments}
         />
       )}
     </div>

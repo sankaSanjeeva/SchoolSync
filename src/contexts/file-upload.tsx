@@ -53,6 +53,7 @@ export function FileUploadProvider({ children }: PropsWithChildren) {
         (snapshot) => {
           const progress =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          // eslint-disable-next-line no-console
           console.log(`Upload is ${progress}% done`)
         },
         (error) => {
