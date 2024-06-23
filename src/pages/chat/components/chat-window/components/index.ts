@@ -1,5 +1,6 @@
 export { default as ChatBubble } from './chat-bubble'
 export { default as Editor } from './editor'
+export { default as FilePreviewDialog } from './file-preview-dialog'
 export { default as Header } from './header'
 export { default as FilePreview } from './editor/components/file-preview'
 export { default as InfoBanner } from './info-banner'

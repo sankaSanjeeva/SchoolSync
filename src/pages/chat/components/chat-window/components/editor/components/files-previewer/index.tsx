@@ -54,7 +54,7 @@ export default function FilesPreviewer({
             file={file}
             className="w-20 h-20"
             onRemove={() => onRemoveFile(file)}
-            onClick={() => console.log('clicked')}
+            // onClick={() => console.log('clicked')}
           />
         ))}
 
